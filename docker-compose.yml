@@ -1,0 +1,73 @@
+version: '2'
+
+services:
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_DATABASE=test
+      - MYSQL_USER=test
+      - MYSQL_PASSWORD=test
+      - MYSQL_ROOT_PASSWORD=test
+
+  postgres:
+    image: postgres:10.6
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=upinus
+      - POSTGRES_PASSWORD=upinus2017
+      - POSTGRES_DB=bulkfulfill
+
+  sqlserver-ubuntu:
+    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    ports:
+      - '1433:1433'
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Upatra@2021
+      - MSSQL_PID=Express 
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: 'rabbit'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: upinus
+      RABBITMQ_DEFAULT_PASS: upinus2017
+    volumes:
+      - ./.docker/rabbitmq/etc/:/etc/rabbitmq/
+      - ./.docker/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./.docker/rabbitmq/logs/:/var/log/rabbitmq/
+    # docker exec [CONTAINER_NAME] rabbitmq-plugins enable rabbitmq_management enable management
+
+  redis:
+    image: redis:5.0.7
+    expose:
+      - 6379
