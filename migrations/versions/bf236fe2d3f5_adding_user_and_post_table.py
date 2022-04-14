@@ -1,8 +1,8 @@
 """Adding User and Post Table
 
-Revision ID: 39cf6b70ff99
+Revision ID: bf236fe2d3f5
 Revises: 
-Create Date: 2022-04-13 22:58:34.198672
+Create Date: 2022-04-14 09:40:44.532909
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '39cf6b70ff99'
+revision = 'bf236fe2d3f5'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('full_name', sa.String(length=50), nullable=True),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('hashed_password', sa.String(length=50), nullable=False),
+    sa.Column('hashed_password', sa.String(length=225), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('is_superuser', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id')

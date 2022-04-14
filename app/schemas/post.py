@@ -1,29 +1,41 @@
-import email
-from typing import List, Optional
-from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+from pydantic import BaseModel
 
 
+# Shared properties
 class PostBase(BaseModel):
-    title: str
+    title: Optional[str] = None
     body: Optional[str] = None
 
 
+# Properties to receive on post creation
 class PostCreate(PostBase):
+    title: str
+    body: str
+
+
+# Properties to receive on post update
+class PostUpdate(PostBase):
     pass
 
 
-class Post(PostBase):
+# Properties shared by models stored in DB
+class PostInDBBase(PostBase):
     id: int
-    owner: EmailStr
+    title: str
+    body: str
+    owner_id: int
 
     class Config:
         orm_mode = True
 
 
-class PostUpdate(BaseModel):
-    title: Optional[str]
-    body: Optional[str]
+# Properties to return to client
+class Post(PostInDBBase):
+    pass
 
-    class Config:
-        orm_mode = True
+
+# Properties properties stored in DB
+class PostInDB(PostInDBBase):
+    pass

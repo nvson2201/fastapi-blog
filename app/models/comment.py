@@ -16,10 +16,10 @@ class Comment(Base):
     body = Column(String(255))
 
     contain_id = Column(Integer, ForeignKey("post.id", ondelete="CASCADE"))
-    contain = relationship("Post", back_populates="comment")
+    contain = relationship("Post", back_populates="comments")
 
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    owner = relationship("User", back_populates="comment")
+    owner = relationship("User", back_populates="comments")
 
     def __repr__(self):
         return f"{self.body}"

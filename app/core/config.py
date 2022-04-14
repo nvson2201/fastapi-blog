@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
-    # ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     # SERVER_NAME: str
     # SERVER_HOST: AnyHttpUrl
     # # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins
@@ -67,7 +67,7 @@ class Settings(BaseSettings):
 
     # EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
     # EMAIL_TEMPLATES_DIR: str = "/app/app/email-templates/build"
-    # EMAILS_ENABLED: bool = False
+    EMAILS_ENABLED: bool = False
 
     # @validator("EMAILS_ENABLED", pre=True)
     # def get_emails_enabled(cls, v: bool, values: Dict[str, Any]) -> bool:
@@ -77,10 +77,10 @@ class Settings(BaseSettings):
     #         and values.get("EMAILS_FROM_EMAIL")
     #     )
 
-    # EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    # FIRST_SUPERUSER: EmailStr
-    # FIRST_SUPERUSER_PASSWORD: str
-    # USERS_OPEN_REGISTRATION: bool = False
+    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+    FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
+    FIRST_SUPERUSER_PASSWORD: str = "1234567"
+    USERS_OPEN_REGISTRATION: bool = False
 
     class Config:
         case_sensitive = True

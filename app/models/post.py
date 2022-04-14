@@ -14,7 +14,7 @@ class Post(Base):
     title = Column(String(50))
     body = Column(String(255))
     owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
-    owner = relationship("User", back_populates="post")
+    owner = relationship("User", back_populates="posts")
     comments = relationship(
         "Comment", back_populates="contain", cascade="all,delete")
 

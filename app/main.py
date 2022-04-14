@@ -4,7 +4,6 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 from app.api.api_v1.api import api_router
 from . import crud, models, schemas
-from .database import SessionLocal, engine
 from app.core.config import settings
 
 app = FastAPI()
