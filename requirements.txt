@@ -5,7 +5,6 @@ anyio==3.5.0
 asgiref==3.5.0
 autopep8==1.6.0
 click==8.1.2
-fastapi==0.75.1
 fastapi-utils==0.2.1
 h11==0.13.0
 httptools==0.4.0
@@ -28,3 +27,16 @@ uvicorn==0.17.6
 uvloop==0.16.0
 watchgod==0.8.2
 websockets==10.2
+
+Authlib==0.15.3
+certifi==2020.12.5
+cffi==1.14.5
+cryptography==3.4.7
+httpcore==0.12.3
+httpx==0.17.1
+itsdangerous==1.1.0
+pycparser==2.20
+PyJWT==2.0.1
+python-multipart==0.0.5
+rfc3986==1.4.0
+sniffio==1.2.0
