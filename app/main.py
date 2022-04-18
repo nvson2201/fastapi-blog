@@ -16,6 +16,19 @@ app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key="!secret")
 
+
+@app.get('/')
+async def home(request: Request):
+    user = request.session.get('user')
+    if user is not None:
+        email = user['email']
+        html = (
+            f'<pre>Email: {email}</pre><br>'
+            '<a href="/docs">documentation</a><br>'
+            '<a href="/logout">logout</a>'
+        )
+        return HTMLResponse(html)
+    return HTMLResponse('<a href="/login">login</a>')
 config = Config('.env')
 oauth = OAuth(config)
 
@@ -29,40 +42,33 @@ oauth.register(
 )
 
 
-@app.get('/')
-async def homepage(request: Request):
-    user = request.session.get('user')
-    if user:
-        data = json.dumps(user)
-        html = (
-            f'<pre>{data}</pre>'
-            '<a href="/logout">logout</a>'
-        )
-        return HTMLResponse(html)
-    return HTMLResponse('<a href="/login">login</a>')
-
-
-@app.get('/login')
+# Tag it as "authentication" for our docs
+@app.get('/login', tags=['authentication'])
 async def login(request: Request):
+    # Redirect Google OAuth back to our application
     redirect_uri = request.url_for('auth')
+
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-@app.get('/auth')
+@app.route('/auth')
 async def auth(request: Request):
-    try:
-        token = await oauth.google.authorize_access_token(request)
-    except OAuthError as error:
-        return HTMLResponse(f'<h1>{error.error}</h1>')
-    user = token.get('userinfo')
-    if user:
-        request.session['user'] = dict(user)
+    # Perform Google OAuth
+    token = await oauth.google.authorize_access_token(request)
+    user = await oauth.google.parse_id_token(request, token)
+
+    # Save the user
+    request.session['user'] = dict(user)
+    print(token)
     return RedirectResponse(url='/')
 
 
-@app.get('/logout')
+# Tag it as "authentication" for our docs
+@app.get('/logout', tags=['authentication'])
 async def logout(request: Request):
+    # Remove the user
     request.session.pop('user', None)
+
     return RedirectResponse(url='/')
 
 
