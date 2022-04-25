@@ -1,11 +1,11 @@
-version: '2'
+version: "2"
 
 services:
   mysql:
     platform: linux/x86_64
     image: mysql:8.0
     ports:
-      - '3306:3306'
+      - "3306:3306"
     environment:
       - MYSQL_DATABASE=test
       - MYSQL_USER=test
@@ -15,7 +15,7 @@ services:
   postgres:
     image: postgres:10.6
     ports:
-      - '5432:5432'
+      - "5432:5432"
     environment:
       - POSTGRES_USER=upinus
       - POSTGRES_PASSWORD=upinus2017
@@ -24,11 +24,11 @@ services:
   sqlserver-ubuntu:
     image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
     ports:
-      - '1433:1433'
+      - "1433:1433"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=Upatra@2021
-      - MSSQL_PID=Express 
+      - MSSQL_PID=Express
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -37,7 +37,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
-  
+
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -54,10 +54,10 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    hostname: 'rabbit'
+    hostname: "rabbit"
     ports:
-      - '5672:5672'
-      - '15672:15672'
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: upinus
       RABBITMQ_DEFAULT_PASS: upinus2017

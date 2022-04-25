@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from app.api.api_v1.api import api_router
 from app.core.config import settings
 import os
@@ -12,23 +12,28 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import HTMLResponse, RedirectResponse
 from authlib.integrations.starlette_client import OAuth, OAuthError
 
+from dependency_injector.wiring import inject, Provide
+from app.redis.services import Service
+from app.redis.containers import Container
+
 app = FastAPI()
 
 app.add_middleware(SessionMiddleware, secret_key="!secret")
 
 
-@app.get('/')
-async def home(request: Request):
-    user = request.session.get('user')
-    if user is not None:
-        email = user['email']
-        html = (
-            f'<pre>Email: {email}</pre><br>'
-            '<a href="/docs">documentation</a><br>'
-            '<a href="/logout">logout</a>'
-        )
-        return HTMLResponse(html)
-    return HTMLResponse('<a href="/login">login</a>')
+# @app.get('/')
+# async def home(request: Request):
+#     user = request.session.get('user')
+#     if user is not None:
+#         email = user['email']
+#         html = (
+#             f'<pre>Email: {email}</pre><br>'
+#             '<a href="/docs">documentation</a><br>'
+#             '<a href="/logout">logout</a>'
+#         )
+#         return HTMLResponse(html)
+#     return HTMLResponse('<a href="/login">login</a>')
+
 config = Config('.env')
 oauth = OAuth(config)
 
@@ -71,5 +76,17 @@ async def logout(request: Request):
 
     return RedirectResponse(url='/')
 
+
+@app.api_route("/")
+@inject
+async def index(service: Service = Depends(Provide[Container.service])):
+    value = await service.process()
+    return {"result": value}
+
+
+container = Container()
+container.config.redis_host.from_env("REDIS_HOST", "localhost:6379")
+container.config.redis_password.from_env("REDIS_PASSWORD", "123456")
+container.wire(modules=[__name__])
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
