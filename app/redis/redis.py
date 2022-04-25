@@ -3,7 +3,7 @@ import aioredis
 
 
 async def init_redis_pool(host: str, password: str) -> AsyncIterator[aioredis.Redis]:
-    pool = aioredis.from_url(
+    pool = aioredis.ConnectionPool.from_url(
         "redis://localhost", encoding="utf-8", decode_responses=True
     )
     meanings = aioredis.Redis(connection_pool=pool)
