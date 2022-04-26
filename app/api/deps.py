@@ -24,6 +24,9 @@ def get_db() -> Generator:
         db.close()
 
 
+def get_redis():
+
+
 def get_current_user(
     db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
 ) -> models.User:

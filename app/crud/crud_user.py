@@ -6,6 +6,7 @@ from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.db.session import redis_session
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
