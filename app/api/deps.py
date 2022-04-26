@@ -25,6 +25,7 @@ def get_db() -> Generator:
 
 
 def get_redis():
+    pass
 
 
 def get_current_user(

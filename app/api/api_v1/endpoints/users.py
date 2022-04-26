@@ -1,14 +1,16 @@
 from typing import Any, List
-
+import pickle
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
+from app.db.session import redis_session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
+from app.models.user import User
 
 router = APIRouter()
 
@@ -123,14 +125,30 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-    user = crud.user.get(db, id=user_id)
-    if user == current_user:
+
+    # cache hit
+    cache_data = None
+    if redis_session.get(str(user_id) + "token") != None:
+        cache_data = pickle.loads(redis_session.get(str(id) + "token"))
+        del cache_data["_sa_instance_state"]
+
+    print(str(user_id) + "token", cache_data)
+
+    if not cache_data:  # cache miss
+        user = crud.user.get(db, id=user_id)
+        # write to cache
+        redis_session.setex(str(user_id) + "token", 7200,
+                            pickle.dumps(user.__dict__))
         return user
-    if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
-    return user
+    # user = crud.user.get(db, id=user_id)
+    # if user == current_user:
+    #     return user
+    # if not crud.user.is_superuser(current_user):
+    #     raise HTTPException(
+    #         status_code=400, detail="The user doesn't have enough privileges"
+    #     )
+
+    return User(**cache_data)
 
 
 @router.put("/{user_id}", response_model=schemas.User)
