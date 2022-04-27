@@ -1,14 +1,17 @@
 from typing import Any, List
-
+import pickle
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
+from sqlalchemy import exc
+from app.db.session import redis_session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
 from app.utils import send_new_account_email
+from app.models.user import User
 
 router = APIRouter()
 
@@ -71,7 +74,17 @@ def update_user_me(
         user_in.full_name = full_name
     if email is not None:
         user_in.email = email
-    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+
+    try:
+        user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    except exc.IntegrityError:
+        raise HTTPException(
+            status_code=409, detail="User with this email already exists"
+        )
+
+    # write user to cache
+    redis_session.setex(str(user.id) + "user_id", 7200,
+                        pickle.dumps(user.__dict__))
     return user
 
 
@@ -83,6 +96,7 @@ def read_user_me(
     """
     Get current user.
     """
+
     return current_user
 
 
@@ -123,14 +137,25 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-    user = crud.user.get(db, id=user_id)
-    if user == current_user:
+
+    # cache hit
+    cache_data = None
+    if redis_session.get(str(user_id) + "user_id") != None:
+        cache_data = pickle.loads(redis_session.get(str(user_id) + "user_id"))
+        del cache_data["_sa_instance_state"]
+
+    print(str(user_id) + "user_id", cache_data)
+
+    if not cache_data:  # cache miss
+        user = crud.user.get(db, id=user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        # write to cache
+        redis_session.setex(str(user_id) + "user_id", 7200,
+                            pickle.dumps(user.__dict__))
         return user
-    if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
-    return user
+
+    return User(**cache_data)
 
 
 @router.put("/{user_id}", response_model=schemas.User)
@@ -150,5 +175,15 @@ def update_user(
             status_code=404,
             detail="The user with this username does not exist in the system",
         )
-    user = crud.user.update(db, db_obj=user, obj_in=user_in)
+
+    try:
+        user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    except exc.IntegrityError:
+        raise HTTPException(
+            status_code=409, detail="User with this email already exists"
+        )
+
+    # write user to cache
+    redis_session.setex(str(user_id) + "user_id", 7200,
+                        pickle.dumps(user.__dict__))
     return user
