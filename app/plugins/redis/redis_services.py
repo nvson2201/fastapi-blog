@@ -13,7 +13,7 @@ def get_cache(id: str, suffix: str):  # thêm return type
     return cache_data
 
 
-def set_cache(id: str, suffix: str, data):  # thêm return type, type of data
+def set_cache(id: str, suffix: str, data):
     try:
         redis_session.setex(
             id + suffix, settings.EXPEIRATION_TIME_CACHE,
@@ -24,6 +24,6 @@ def set_cache(id: str, suffix: str, data):  # thêm return type, type of data
         return {'msg': 'Bad Request!', 'error': str(e)}
 
 
-def delete_cache(id: str):  # thêm return type
+def delete_cache(id: str):
     redis_session.delete(id)
     return {'msg': 'Deleted!'}

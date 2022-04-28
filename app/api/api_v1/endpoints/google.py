@@ -35,30 +35,21 @@ oauth.register(
 )
 
 
-# Tag it as "authentication" for our docs
 @router.get('/login', tags=['authentication'])
 async def login(request: Request):
-    # Redirect Google OAuth back to our application
     redirect_uri = request.url_for('auth')
-
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
 @router.route('/auth')
 async def auth(request: Request):
-    # Perform Google OAuth
     token = await oauth.google.authorize_access_token(request)
     user = await oauth.google.parse_id_token(request, token)
-
-    # Save the user
     request.session['user'] = dict(user)
     return RedirectResponse(url='/api/v1')
 
 
-# Tag it as "authentication" for our docs
 @router.get('/logout', tags=['authentication'])
 async def logout(request: Request):
-    # Remove the user
     request.session.pop('user', None)
-
     return RedirectResponse(url='/api/v1')
