@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     EXPEIRATION_TIME_CACHE: int = 60 * 24 * 5
 
+    REDIS_SUFFIX_USER = "user_id"
+    REDIS_SUFFIX_POST = "post_id"
+    REDIS_SUFFIX_COMMENT = "comment_id"
+
     # SERVER_NAME: str
     # SERVER_HOST: AnyHttpUrl
     # # BACKEND_CORS_ORIGINS is a JSON-formatted list of origins

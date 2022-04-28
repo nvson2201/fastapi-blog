@@ -1,6 +1,5 @@
 from typing import Any, List
 
-import pickle
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
@@ -139,7 +138,7 @@ def read_user_by_id(
     # cache hit
     cache_data = redis_services.get_cache(
         id=str(user_id),
-        suffix="user_id"
+        suffix=settings.REDIS_SUFFIX_USER
     )
     if cache_data:
         user = User(**cache_data)
@@ -148,6 +147,7 @@ def read_user_by_id(
         user = crud.user.get(db, id=user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+
         # write to cache
         redis_services.set_cache(
             id=str(user_id),
@@ -165,8 +165,6 @@ def update_user(
     user_id: int,
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
-
-
 ) -> Any:
     """
     Update a user.
@@ -175,7 +173,7 @@ def update_user(
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="The user with this username does not exist in the system",
+            detail="User not found",
         )
 
     try:
@@ -188,8 +186,8 @@ def update_user(
     # write user to cache
     redis_services.set_cache(
         id=str(user_id),
-        suffix="user_id",
-        data=pickle.dumps(user.__dict__)
+        suffix=settings.REDIS_SUFFIX_USER,
+        data=user.__dict__
     )
 
     return user

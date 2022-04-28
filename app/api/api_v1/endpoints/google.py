@@ -52,7 +52,6 @@ async def auth(request: Request):
 
     # Save the user
     request.session['user'] = dict(user)
-    print(token)
     return RedirectResponse(url='/api/v1')
 
 
