@@ -1,17 +1,17 @@
-from typing import Any, List
 import pickle
+from typing import Any, List
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr
+from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-from sqlalchemy import exc
-from app.db.session import redis_session
 from app import crud, models, schemas
 from app.api import deps
-from app.core.config import settings
 from app.utils import send_new_account_email
+from app.core.config import settings
 from app.models.user import User
+from app.plugins.redis import redis_services
 
 router = APIRouter()
 
@@ -82,9 +82,6 @@ def update_user_me(
             status_code=409, detail="User with this email already exists"
         )
 
-    # write user to cache
-    redis_session.setex(str(user.id) + "user_id", 7200,
-                        pickle.dumps(user.__dict__))
     return user
 
 
@@ -96,7 +93,6 @@ def read_user_me(
     """
     Get current user.
     """
-
     return current_user
 
 
@@ -137,25 +133,26 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-
     # cache hit
-    cache_data = None
-    if redis_session.get(str(user_id) + "user_id") != None:
-        cache_data = pickle.loads(redis_session.get(str(user_id) + "user_id"))
-        del cache_data["_sa_instance_state"]
-
-    print(str(user_id) + "user_id", cache_data)
-
-    if not cache_data:  # cache miss
+    cache_data = redis_services.get_cache(
+        id=str(user_id),
+        suffix="user_id"
+    )
+    if cache_data:
+        user = User(**cache_data)
+    # cache miss
+    else:
         user = crud.user.get(db, id=user_id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         # write to cache
-        redis_session.setex(str(user_id) + "user_id", 7200,
-                            pickle.dumps(user.__dict__))
-        return user
+        redis_services.set_cache(
+            id=str(user_id),
+            suffix="user_id",
+            data=pickle.dumps(user.__dict__)
+        )
 
-    return User(**cache_data)
+    return user
 
 
 @router.put("/{user_id}", response_model=schemas.User)
@@ -184,6 +181,10 @@ def update_user(
         )
 
     # write user to cache
-    redis_session.setex(str(user_id) + "user_id", 7200,
-                        pickle.dumps(user.__dict__))
+    redis_services.set_cache(
+        id=str(user_id),
+        suffix="user_id",
+        data=pickle.dumps(user.__dict__)
+    )
+
     return user
