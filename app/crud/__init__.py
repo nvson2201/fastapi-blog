@@ -1,6 +1,6 @@
-from .crud_post import post
-from .crud_user import user
-from .crud_comment import comment
+from .crud_post import post  # noqa
+from .crud_user import user  # noqa
+from .crud_comment import comment  # noqa
 # For a new basic set of CRUD operations you could just do
 
 # from .base import CRUDBase
