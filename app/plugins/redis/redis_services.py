@@ -16,7 +16,8 @@ def get_cache(id: str, suffix: str):  # thêm return type
 def set_cache(id: str, suffix: str, data):  # thêm return type, type of data
     try:
         redis_session.setex(
-            id + suffix, settings.EXPEIRATION_TIME_CACHE, pickle.dumps(data))
+            id + suffix, settings.EXPEIRATION_TIME_CACHE,
+            pickle.dumps(data))
         return data
     except Exception as e:
         print(e)

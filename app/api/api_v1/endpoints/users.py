@@ -152,19 +152,21 @@ def read_user_by_id(
         redis_services.set_cache(
             id=str(user_id),
             suffix="user_id",
-            data=pickle.dumps(user.__dict__)
+            data=user.__dict__
         )
 
     return user
 
 
-@router.put("/{user_id}", response_model=schemas.User)
+@ router.put("/{user_id}", response_model=schemas.User)
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
+
+
 ) -> Any:
     """
     Update a user.

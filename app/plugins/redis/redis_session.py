@@ -21,4 +21,3 @@ if __name__ == "__main__":
     import pickle
     redis_session.setex("user", 100, pickle.dumps(token))
     print(pickle.loads(redis_session.get("user")))
-    print(redis_session.exists("2user_id"))
