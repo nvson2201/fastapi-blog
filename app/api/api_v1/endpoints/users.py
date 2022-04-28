@@ -1,5 +1,6 @@
-import pickle
 from typing import Any, List
+
+import pickle
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.encoders import jsonable_encoder
 from pydantic.networks import EmailStr

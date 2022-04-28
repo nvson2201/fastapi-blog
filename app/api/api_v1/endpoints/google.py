@@ -1,9 +1,9 @@
+# Google Auth API
 from starlette.responses import HTMLResponse, RedirectResponse
 from starlette.config import Config
 from starlette.requests import Request
-from authlib.integrations.starlette_client import OAuth, OAuthError
-from fastapi import APIRouter, Body, Depends, HTTPException
-# Google Auth API
+from authlib.integrations.starlette_client import OAuth
+from fastapi import APIRouter
 
 router = APIRouter()
 
