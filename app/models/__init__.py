@@ -1,3 +1,3 @@
-from .post import Post
-from .user import User
-from .comment import Comment
+from .post import Post  # noqa
+from .user import User   # noqa
+from .comment import Comment   # noqa

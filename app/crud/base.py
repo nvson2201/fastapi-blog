@@ -1,4 +1,3 @@
-import pickle
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
@@ -14,7 +13,8 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         """
-        CRUD object with default methods to Create, Read, Update, Delete (CRUD).
+        CRUD object with default methods to
+        Create, Read, Update, Delete (CRUD).
         **Parameters**
         * `model`: A SQLAlchemy model class
         * `schema`: A Pydantic model (schema) class
@@ -22,20 +22,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        # # cache hit
-        # cache_data = None
-        # if redis_session.get(str(id) + "token") != None:
-        #     cache_data = pickle.loads(redis_session.get(str(id) + "token"))
-        # print("cachela", cache_data)
-
-        # if not cache_data:  # cache miss
-        #     result_model = db.query(self.model).filter(
-        #         self.model.id == id).first()
-
-        # # write to cache
-        # redis_session.setex(str(id) + "token", 7200,
-        #                     pickle.dumps(result_model.__dict__))
-
         return db.query(self.model).filter(self.model.id == id).first()
 
     def get_multi(

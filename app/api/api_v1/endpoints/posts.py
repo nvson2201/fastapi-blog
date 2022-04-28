@@ -57,7 +57,8 @@ def update_post(
     post = crud.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if not crud.user.is_superuser(current_user) and (post.owner_id != current_user.id):
+    if (not crud.user.is_superuser(current_user)
+            and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     post = crud.post.update(db=db, db_obj=post, obj_in=post_in)
     return post
@@ -76,7 +77,8 @@ def read_post(
     post = crud.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if not crud.user.is_superuser(current_user) and (post.owner_id != current_user.id):
+    if (not crud.user.is_superuser(current_user)
+            and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     return post
 
@@ -94,7 +96,8 @@ def delete_post(
     post = crud.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if not crud.user.is_superuser(current_user) and (post.owner_id != current_user.id):
+    if (not crud.user.is_superuser(current_user)
+            and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=400, detail="Not enough permissions")
     post = crud.post.remove(db=db, id=id)
     return post

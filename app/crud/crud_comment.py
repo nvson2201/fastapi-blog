@@ -10,7 +10,8 @@ from app.schemas.comment import CommentCreate, CommentUpdate
 
 class CRUDComment(CRUDBase[Comment, CommentCreate, CommentUpdate]):
     def create_with_owner(
-        self, db: Session, *, obj_in: CommentCreate, owner_id: int, contain_id: int
+        self, db: Session, *, obj_in: CommentCreate,
+        owner_id: int, contain_id: int
     ) -> Comment:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data, owner_id=owner_id,
