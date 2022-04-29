@@ -41,8 +41,6 @@ PyYAML = "==6.0"
 SQLAlchemy = "==1.4.35"
 Authlib = "==0.15.3"
 PyJWT = "==2.0.1"
-flake8 = "*"
-autopep8 = "*"
 python-jose = "*"
 passlib = "*"
 emails = "*"
@@ -51,6 +49,8 @@ bcrypt = "*"
 tenacity = "*"
 
 [dev-packages]
+flake8 = "*"
+autopep8 = "*"
 
 [requires]
 python_version = "3.8"
