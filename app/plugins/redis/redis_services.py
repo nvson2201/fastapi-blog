@@ -1,6 +1,6 @@
 import pickle
 from app.plugins.redis.redis_session import redis_session
-from app.core.config import settings
+from app.config import settings
 
 
 def get_cache(id: str, suffix: str):  # thêm return type

@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from app.utils import send_new_account_email
-from app.core.config import settings
+from app.utils.mail import send_new_account_email
+from app.config import settings
 from app.models.user import User
 from app.plugins.redis import redis_services
 

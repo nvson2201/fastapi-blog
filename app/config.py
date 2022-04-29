@@ -20,6 +20,12 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str = "1234567"
     USERS_OPEN_REGISTRATION: bool = False
 
+    DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa
+    GOOGLE_CLIENT_ID = "1041701496632-i22nqlha32dsjlasvhlk0spaj7k10cil.apps.googleusercontent.com"  # noqa
+    GOOGLE_CLIENT_SECRET = "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"
+    REDIS_HOST = "localhost"
+    REDIS_PASSWORD = "123456"
+
     class Config:
         case_sensitive = True
 

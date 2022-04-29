@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from app.api.api_v1.api import api_router
-from app.core.config import settings
+from app.config import settings
 from starlette.middleware.sessions import SessionMiddleware
 
 

@@ -7,8 +7,8 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.core import security
-from app.core.config import settings
+from app.utils import security
+from app.config import settings
 from app.db.session import SessionLocal
 
 reusable_oauth2 = OAuth2PasswordBearer(
