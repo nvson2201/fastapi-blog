@@ -65,7 +65,7 @@ def update_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not crud.user.is_superuser(current_user) and
             (comment.owner_id != current_user.id)):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     comment = crud.comment.update(db=db, db_obj=comment, obj_in=comment_in)
     return comment
 
@@ -85,7 +85,7 @@ def read_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not crud.user.is_superuser(current_user)
             and (comment.owner_id != current_user.id)):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     return comment
 
 
@@ -104,6 +104,6 @@ def delete_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not crud.user.is_superuser(current_user) and
             comment.owner_id != current_user.id):
-        raise HTTPException(status_code=400, detail="Not enough permissions")
+        raise HTTPException(status_code=403, detail="Not enough permissions")
     comment = crud.comment.remove(db=db, id=id)
     return comment

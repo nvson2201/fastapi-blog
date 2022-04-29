@@ -43,8 +43,8 @@ def create_user(
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
+            status_code=409,
+            detail="User with this email already exists",
         )
     user = crud.user.create(db, obj_in=user_in)
     if settings.EMAILS_ENABLED and user_in.email:
@@ -117,8 +117,8 @@ def create_user_open(
     user = crud.user.get_by_email(db, email=email)
     if user:
         raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system",
+            status_code=409,
+            detail="User with this email already exists",
         )
     user_in = schemas.UserCreate(
         password=password, email=email, full_name=full_name)
