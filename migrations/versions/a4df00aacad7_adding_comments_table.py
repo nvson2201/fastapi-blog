@@ -19,7 +19,7 @@ depends_on = None
 def upgrade():
     # create comments table
     op.create_table(
-        'comment',
+        'comments',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('body', sa.String(length=255), nullable=True),
         sa.Column('contain_id', sa.Integer(), nullable=True),
@@ -30,9 +30,9 @@ def upgrade():
             ['owner_id'], ['user.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_comment_id'), 'comment', ['id'], unique=False)
+    op.create_index(op.f('ix_comment_id'), 'comments', ['id'], unique=False)
 
 
 def downgrade():
-    op.drop_index(op.f('ix_comment_id'), table_name='comment')
-    op.drop_table('comment')
+    op.drop_index(op.f('ix_comment_id'), table_name='comments')
+    op.drop_table('comments')

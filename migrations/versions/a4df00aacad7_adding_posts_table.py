@@ -19,7 +19,7 @@ depends_on = None
 def upgrade():
     # create posts table
     op.create_table(
-        'post',
+        'posts',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('title', sa.String(length=50), nullable=True),
         sa.Column('body', sa.String(length=255), nullable=True),
@@ -28,9 +28,9 @@ def upgrade():
             ['owner_id'], ['user.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_post_id'), 'post', ['id'], unique=False)
+    op.create_index(op.f('ix_post_id'), 'posts', ['id'], unique=False)
 
 
 def downgrade():
-    op.drop_index(op.f('ix_post_id'), table_name='post')
-    op.drop_table('post')
+    op.drop_index(op.f('ix_post_id'), table_name='posts')
+    op.drop_table('posts')
