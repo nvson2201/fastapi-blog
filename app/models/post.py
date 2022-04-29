@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class Post(Base):
-    __tablename__ = "post"
+    __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(50))
     body = Column(String(255))
-    owner_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"))
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     owner = relationship("User", back_populates="posts")
     comments = relationship(
         "Comment", back_populates="contain", cascade="all,delete")

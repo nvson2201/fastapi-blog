@@ -48,6 +48,7 @@ passlib = "*"
 emails = "*"
 redis = "*"
 bcrypt = "*"
+tenacity = "*"
 
 [dev-packages]
 

@@ -1,8 +1,8 @@
-"""Adding Comments Table
+"""create comments table
 
-Revision ID: a4df00aacad7
-Revises:
-Create Date: 2022-04-16 22:49:04.121505
+Revision ID: 86a3ae93c923
+Revises: baf7d4bacbd0
+Create Date: 2022-04-29 09:31:37.798299
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a4df00aacad7'
-down_revision = None
+revision = '86a3ae93c923'
+down_revision = 'baf7d4bacbd0'
 branch_labels = None
 depends_on = None
 
@@ -25,9 +25,9 @@ def upgrade():
         sa.Column('contain_id', sa.Integer(), nullable=True),
         sa.Column('owner_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
-            ['contain_id'], ['post.id'], ondelete='CASCADE'),
+            ['contain_id'], ['posts.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(
-            ['owner_id'], ['user.id'], ondelete='CASCADE'),
+            ['owner_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_comment_id'), 'comments', ['id'], unique=False)

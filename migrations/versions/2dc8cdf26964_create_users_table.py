@@ -1,8 +1,8 @@
-"""Adding Users Table
+"""create users table
 
-Revision ID: a4df00aacad7
+Revision ID: 2dc8cdf26964
 Revises:
-Create Date: 2022-04-16 22:49:04.121505
+Create Date: 2022-04-29 09:22:51.340075
 
 """
 from alembic import op
@@ -10,14 +10,14 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a4df00aacad7'
+revision = '2dc8cdf26964'
 down_revision = None
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    # create table users
+    # create users table
     op.create_table(
         'users',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -30,6 +30,7 @@ def upgrade():
         sa.Column('is_superuser', sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
+
     op.create_index(op.f('ix_user_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_user_full_name'), 'users',
                     ['full_name'], unique=False)
@@ -40,4 +41,5 @@ def downgrade():
     op.drop_index(op.f('ix_user_id'), table_name='users')
     op.drop_index(op.f('ix_user_full_name'), table_name='users')
     op.drop_index(op.f('ix_user_email'), table_name='users')
+
     op.drop_table('users')

@@ -13,3 +13,7 @@ alembic init migrations
 
 alembic revision --autogenerate -m "Adding User and Post Table"
 alembic upgrade head
+
+
+
+alembic upgrade <target-revision> || alembic downgrade <target-revision>
