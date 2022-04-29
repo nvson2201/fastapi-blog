@@ -11,10 +11,12 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.Comment])
 def read_comments(
+    post_id: int,
     db: Session = Depends(deps.get_db),
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
+
 ) -> Any:
     """
     Retrieve comments.
@@ -23,27 +25,31 @@ def read_comments(
         comments = crud.comment.get_multi(db, skip=skip, limit=limit)
     else:
         comments = crud.comment.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip, limit=limit
+            db=db, owner_id=current_user.id, skip=skip,
+            limit=limit, contain_id=post_id
         )
     return comments
 
 
-@router.post("/", response_model=schemas.Comment)
+@ router.post("/", response_model=schemas.Comment)
 def create_comment(
     *,
     db: Session = Depends(deps.get_db),
+    post_id: int,
     comment_in: schemas.CommentCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
+
+
 ) -> Any:
     """
     Create new comment.
     """
     comment = crud.comment.create_with_owner(
-        db=db, obj_in=comment_in, owner_id=current_user.id)
+        db=db, obj_in=comment_in, owner_id=current_user.id, contain_id=post_id)
     return comment
 
 
-@router.put("/{id}", response_model=schemas.Comment)
+@ router.put("/{id}", response_model=schemas.Comment)
 def update_comment(
     *,
     db: Session = Depends(deps.get_db),

@@ -22,11 +22,13 @@ class CRUDComment(CRUDBase[Comment, CommentCreate, CommentUpdate]):
         return db_obj
 
     def get_multi_by_owner(
-        self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
+        self, db: Session, *, owner_id: int, contain_id=int,
+        skip: int = 0, limit: int = 100
     ) -> List[Comment]:
         return (
             db.query(self.model)
-            .filter(Comment.owner_id == owner_id)
+            .filter(Comment.owner_id == owner_id,
+                    Comment.contain_id == contain_id)
             .offset(skip)
             .limit(limit)
             .all()
