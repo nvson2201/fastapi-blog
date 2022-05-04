@@ -18,4 +18,10 @@ class User(Base):
         "Comment", back_populates="owner", cascade="all,delete")
 
     def __repr__(self):
-        return f"{self.email}"
+        return f"""
+                    fullname: {self.full_name},
+                    email: {self.email},
+                    passowrd: {self.hashed_password},
+                    is_active: {self.is_active},
+                    is_superuser: {self.is_superuser}
+                """
