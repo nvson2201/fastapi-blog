@@ -34,5 +34,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index(op.f('ix_comment_id'), table_name='comments')
     op.drop_table('comments')

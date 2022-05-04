@@ -38,8 +38,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index(op.f('ix_user_id'), table_name='users')
-    op.drop_index(op.f('ix_user_full_name'), table_name='users')
-    op.drop_index(op.f('ix_user_email'), table_name='users')
-
     op.drop_table('users')

@@ -32,5 +32,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_index(op.f('ix_post_id'), table_name='posts')
     op.drop_table('posts')
