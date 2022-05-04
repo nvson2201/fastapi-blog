@@ -7,10 +7,10 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
+from app.services import crud_cache
 from app.api import deps
 from app.utils.mail import send_new_account_email
 from app.config import settings
-from app.models.user import User
 from app.plugins.redis import redis_services
 
 router = APIRouter()
@@ -135,25 +135,9 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-    # cache hit
-    cache_data = redis_services.get_cache(
-        id=str(user_id),
-        suffix=settings.REDIS_SUFFIX_USER
-    )
-    if cache_data:
-        user = User(**cache_data)
-    # cache miss
-    else:
-        user = crud.user.get(db, id=user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        # write to cache
-        redis_services.set_cache(
-            id=str(user_id),
-            suffix="user_id",
-            data=user.__dict__
-        )
+    user = crud_cache.user.get_or_set(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
     return user
 
