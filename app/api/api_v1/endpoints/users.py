@@ -9,7 +9,6 @@ from app.services import crud_cache
 from app.api import deps
 from app.utils.mail import send_new_account_email
 from app.config import settings
-from app.plugins.redis import redis_services
 
 router = APIRouter()
 
@@ -34,6 +33,7 @@ def create_user(
     db: Session = Depends(deps.get_db),
     user_in: schemas.UserCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Create new user.
@@ -51,6 +51,9 @@ def create_user(
             username=user_in.email,
             password=user_in.password
         )
+
+    user_services.set_cache(id=user.id, data=user)
+
     return user
 
 
@@ -133,6 +136,7 @@ def update_user(
     user_id: int,
     user_in: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Update a user.
@@ -151,11 +155,6 @@ def update_user(
             status_code=409, detail="User with this email already exists"
         )
 
-    # write user to cache
-    redis_services.set_cache(
-        id=str(user_id),
-        suffix=settings.REDIS_SUFFIX_USER,
-        data=user.__dict__
-    )
+    user_services.set_cache(id=user_id, data=user)
 
     return user
