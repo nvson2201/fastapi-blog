@@ -10,6 +10,7 @@ from app import crud, models, schemas
 from app.utils import security
 from app.config import settings
 from app.db.session import SessionLocal
+from app.services.crud_cache import UserServices
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -60,3 +61,9 @@ def get_current_active_superuser(
             status_code=403, detail="The user doesn't have enough privileges"
         )
     return current_user
+
+
+def get_user_services(
+    db: Session = Depends(get_db)
+):
+    return UserServices(db)

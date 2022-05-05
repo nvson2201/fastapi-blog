@@ -114,11 +114,12 @@ def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(deps.get_current_active_user),
     db: Session = Depends(deps.get_db),
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Get a specific user by id.
     """
-    user = crud_cache.user.get_by_id(db, id=user_id)
+    user = user_services.get_by_id(db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 

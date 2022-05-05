@@ -6,6 +6,10 @@ from app.models.user import User
 
 
 class UserServices:
+
+    def __init__(self, db: Session):
+        self.db = db
+
     def get_cache(self, id: str):
         return redis_services.get_cache(
             id=str(id),
@@ -29,6 +33,3 @@ class UserServices:
             cache_data = self.set_cache(id=id, data=user)
 
         return user
-
-
-user = UserServices()
