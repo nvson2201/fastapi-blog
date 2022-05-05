@@ -5,30 +5,30 @@ from app import crud
 from app.models.user import User
 
 
-class UserCL:
-    def get(self, id: str):
+class UserServices:
+    def get_cache(self, id: str):
         return redis_services.get_cache(
             id=str(id),
             suffix=settings.REDIS_SUFFIX_USER
         )
 
-    def set(self, id: str, data: User):
+    def set_cache(self, id: str, data: User):
         redis_services.set_cache(
             id=str(id),
             suffix=settings.REDIS_SUFFIX_USER,
             data=data.__dict__
         )
 
-    def get_or_set(self, db: Session, id: str):
-        cache_data = self.get(id=id)
+    def get_by_id(self, db: Session, id: str):
+        cache_data = self.get_cache(id=id)
 
         if cache_data:
             user = User(**cache_data)
         else:
             user = crud.user.get(db, id=id)
-            cache_data = self.set(id=id, data=user)
+            cache_data = self.set_cache(id=id, data=user)
 
         return user
 
 
-user = UserCL()
+user = UserServices()

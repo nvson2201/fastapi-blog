@@ -118,7 +118,7 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-    user = crud_cache.user.get_or_set(db, id=user_id)
+    user = crud_cache.user.get_by_id(db, id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
