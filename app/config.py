@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     LOCAL_CURRENT_TIME = (datetime.datetime.utcnow() +
                           datetime.timedelta(hours=7))
+    # year 1 month 1 day 1
     START_TIME_DEFAULT = datetime.datetime(
         1, 1, 1, 0, 0, 0, 0) + datetime.timedelta(hours=7)
 

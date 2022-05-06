@@ -11,7 +11,7 @@ depends_on = None
 
 
 def upgrade():
-    # Add columns create_date to users table
+    # Add columns created_date to users table
     op.add_column(
         'users',
         sa.Column(

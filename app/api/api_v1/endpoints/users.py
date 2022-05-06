@@ -29,8 +29,6 @@ def read_users(
     date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
-
-
 ) -> Any:
     """
     Retrieve users by admin.

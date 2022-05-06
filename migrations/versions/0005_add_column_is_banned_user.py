@@ -9,7 +9,7 @@ depends_on = None
 
 
 def upgrade():
-    # Add columns create_date to users table
+    # Add columns is_banned to users table
     op.add_column(
         'users',
         sa.Column('is_banned', sa.Boolean(), nullable=True)
