@@ -1,17 +1,10 @@
-"""create comments table
-
-Revision ID: 86a3ae93c923
-Revises: baf7d4bacbd0
-Create Date: 2022-04-29 09:31:37.798299
-
-"""
 from alembic import op
 import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '86a3ae93c923'
-down_revision = 'baf7d4bacbd0'
+revision = '0003'
+down_revision = '0002'
 branch_labels = None
 depends_on = None
 

@@ -42,7 +42,7 @@ class UserServices:
         return user
 
     def update_by_id(self, db: Session, id: str, body: UserUpdate):
-        user = self.get_by_id(db, id=id)
+        user = crud.user.get(db, id=id)
         if not user:
             raise UserNotFound
 

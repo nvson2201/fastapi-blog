@@ -13,12 +13,23 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return db.query(User).filter(User.email == email).first()
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
-        db_obj = User(
-            email=obj_in.email,
-            hashed_password=get_password_hash(obj_in.password),
-            full_name=obj_in.full_name,
-            is_superuser=obj_in.is_superuser,
-        )
+        # db_obj = User(
+        #     email=obj_in.email,
+        #     hashed_password=get_password_hash(obj_in.password),
+        #     full_name=obj_in.full_name,
+        #     is_superuser=obj_in.is_superuser,
+        #     is_banned=obj_in.is_banned
+        # )
+
+        db_obj = User()
+        exclude_keys_in_user_model = ['password']
+
+        for key, value in obj_in.__dict__.items():
+            if key not in exclude_keys_in_user_model:
+                setattr(db_obj, key, value)
+
+        db_obj.hashed_password = get_password_hash(obj_in.password)
+
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
