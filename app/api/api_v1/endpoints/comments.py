@@ -36,7 +36,7 @@ def create_comment(
     *,
     db: Session = Depends(deps.get_db),
     post_id: int,
-    comment_in: schemas.CommentCreate,
+    body: schemas.CommentCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 
 
@@ -45,7 +45,7 @@ def create_comment(
     Create new comment.
     """
     comment = crud.comment.create_with_owner(
-        db=db, obj_in=comment_in, owner_id=current_user.id, contain_id=post_id)
+        db=db, obj_in=body, owner_id=current_user.id, contain_id=post_id)
     return comment
 
 
@@ -54,7 +54,7 @@ def update_comment(
     *,
     db: Session = Depends(deps.get_db),
     id: int,
-    comment_in: schemas.CommentUpdate,
+    body: schemas.CommentUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -66,7 +66,7 @@ def update_comment(
     if (not crud.user.is_superuser(current_user) and
             (comment.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    comment = crud.comment.update(db=db, db_obj=comment, obj_in=comment_in)
+    comment = crud.comment.update(db=db, db_obj=comment, obj_in=body)
     return comment
 
 

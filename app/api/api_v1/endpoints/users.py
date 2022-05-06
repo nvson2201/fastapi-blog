@@ -31,25 +31,25 @@ def read_users(
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
+    body: schemas.UserCreate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
     user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Create new user.
     """
-    user = crud.user.get_by_email(db, email=user_in.email)
+    user = crud.user.get_by_email(db, email=body.email)
     if user:
         raise HTTPException(
             status_code=409,
             detail="User with this email already exists",
         )
-    user = crud.user.create(db, obj_in=user_in)
-    if settings.EMAILS_ENABLED and user_in.email:
+    user = crud.user.create(db, obj_in=body)
+    if settings.EMAILS_ENABLED and body.email:
         send_new_account_email(
-            email_to=user_in.email,
-            username=user_in.email,
-            password=user_in.password
+            email_to=body.email,
+            username=body.email,
+            password=body.password
         )
 
     user_services.set_cache(id=user.id, data=user)
@@ -61,14 +61,14 @@ def create_user(
 def update_user_me(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserUpdate,
+    body: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Update own user.
     """
     try:
-        user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+        user = crud.user.update(db, db_obj=current_user, obj_in=body)
     except exc.IntegrityError:
         raise HTTPException(
             status_code=409, detail="User with this email already exists"
@@ -92,7 +92,7 @@ def read_user_me(
 def create_user_open(
     *,
     db: Session = Depends(deps.get_db),
-    user_in: schemas.UserCreate,
+    body: schemas.UserCreate,
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -102,13 +102,13 @@ def create_user_open(
             status_code=403,
             detail="Open user registration is forbidden on this server",
         )
-    user = crud.user.get_by_email(db, email=user_in.email)
+    user = crud.user.get_by_email(db, email=body.email)
     if user:
         raise HTTPException(
             status_code=409,
             detail="User with this email already exists",
         )
-    user = crud.user.create(db, obj_in=user_in)
+    user = crud.user.create(db, obj_in=body)
     return user
 
 
@@ -134,7 +134,7 @@ def update_user(
     *,
     db: Session = Depends(deps.get_db),
     user_id: int,
-    user_in: schemas.UserUpdate,
+    body: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_superuser),
     user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
@@ -149,7 +149,7 @@ def update_user(
         )
 
     try:
-        user = crud.user.update(db, db_obj=user, obj_in=user_in)
+        user = crud.user.update(db, db_obj=user, obj_in=body)
     except exc.IntegrityError:
         raise HTTPException(
             status_code=409, detail="User with this email already exists"

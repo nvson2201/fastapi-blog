@@ -32,14 +32,14 @@ def read_posts(
 def create_post(
     *,
     db: Session = Depends(deps.get_db),
-    post_in: schemas.PostCreate,
+    body: schemas.PostCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Create new post.
     """
     post = crud.post.create_with_owner(
-        db=db, obj_in=post_in, owner_id=current_user.id)
+        db=db, obj_in=body, owner_id=current_user.id)
     return post
 
 
@@ -48,7 +48,7 @@ def update_post(
     *,
     db: Session = Depends(deps.get_db),
     id: int,
-    post_in: schemas.PostUpdate,
+    body: schemas.PostUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -60,7 +60,7 @@ def update_post(
     if (not crud.user.is_superuser(current_user)
             and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = crud.post.update(db=db, db_obj=post, obj_in=post_in)
+    post = crud.post.update(db=db, db_obj=post, obj_in=body)
     return post
 
 
