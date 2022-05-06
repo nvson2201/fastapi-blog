@@ -10,13 +10,13 @@ class UserServices:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_cache(self, id: str):
+    def _get_cache(self, id: str):
         return redis_services.get_cache(
             id=str(id),
             suffix=settings.REDIS_SUFFIX_USER
         )
 
-    def set_cache(self, id: str, data: User):
+    def _set_cache(self, id: str, data: User):
         redis_services.set_cache(
             id=str(id),
             suffix=settings.REDIS_SUFFIX_USER,
@@ -24,12 +24,12 @@ class UserServices:
         )
 
     def get_by_id(self, db: Session, id: str):
-        cache_data = self.get_cache(id=id)
+        cache_data = self._get_cache(id=id)
 
         if cache_data:
             user = User(**cache_data)
         else:
             user = crud.user.get(db, id=id)
-            cache_data = self.set_cache(id=id, data=user)
+            cache_data = self._set_cache(id=id, data=user)
 
         return user

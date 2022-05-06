@@ -52,7 +52,7 @@ def create_user(
             password=body.password
         )
 
-    user_services.set_cache(id=user.id, data=user)
+    user_services._set_cache(id=user.id, data=user)
 
     return user
 
@@ -155,6 +155,6 @@ def update_user(
             status_code=409, detail="User with this email already exists"
         )
 
-    user_services.set_cache(id=user_id, data=user)
+    user_services._set_cache(id=user.id, data=user)
 
     return user
