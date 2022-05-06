@@ -1,10 +1,23 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from app.api.api_v1.api import api_router
 from app.config import settings
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi.responses import JSONResponse
 
 
 app = FastAPI()
 app.include_router(api_router, prefix=settings.API_V1_STR)
 app.add_middleware(SessionMiddleware, secret_key="!secret")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+):
+    return JSONResponse(
+        status_code=400,
+        content=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+    )
