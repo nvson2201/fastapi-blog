@@ -1,15 +1,14 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas
 from app.services import crud_cache
 from app.api import deps
-from app.utils.mail import send_new_account_email
-from app.config import settings
-from app.services.crud_cache.exceptions import UserNotFound, UserDuplicate
+from app.services.crud_cache.exceptions import (
+    UserNotFound, UserDuplicate, UserForbiddenRegiser
+)
 
 router = APIRouter()
 
@@ -20,11 +19,12 @@ def read_users(
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Retrieve users.
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    users = user_services.read_users(db, skip=skip, limit=limit)
     return users
 
 
@@ -39,21 +39,13 @@ def create_user(
     """
     Create new user.
     """
-    user = crud.user.get_by_email(db, email=body.email)
-    if user:
+    try:
+        user = user_services.create_user(db, body=body)
+    except UserDuplicate:
         raise HTTPException(
             status_code=409,
-            detail="User with this email already exists",
+            detail="User with this email already exists"
         )
-    user = crud.user.create(db, obj_in=body)
-    if settings.EMAILS_ENABLED and body.email:
-        send_new_account_email(
-            email_to=body.email,
-            username=body.email,
-            password=body.password
-        )
-
-    user_services._set_cache(id=user.id, data=user)
 
     return user
 
@@ -64,15 +56,17 @@ def update_user_me(
     db: Session = Depends(deps.get_db),
     body: schemas.UserUpdate,
     current_user: models.User = Depends(deps.get_current_active_user),
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Update own user.
     """
     try:
-        user = crud.user.update(db, db_obj=current_user, obj_in=body)
-    except exc.IntegrityError:
+        user = user_services.update_by_id(db, id=current_user.id, body=body)
+    except UserDuplicate:
         raise HTTPException(
-            status_code=409, detail="User with this email already exists"
+            status_code=409,
+            detail="User with this email already exists"
         )
 
     return user
@@ -94,22 +88,24 @@ def create_user_open(
     *,
     db: Session = Depends(deps.get_db),
     body: schemas.UserCreate,
+    user_services: crud_cache.UserServices = Depends(deps.get_user_services)
 ) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    if not settings.USERS_OPEN_REGISTRATION:
+    try:
+        user = user_services.create_user(db, body=body)
+    except UserForbiddenRegiser:
         raise HTTPException(
             status_code=403,
             detail="Open user registration is forbidden on this server",
         )
-    user = crud.user.get_by_email(db, email=body.email)
-    if user:
+    except UserDuplicate:
         raise HTTPException(
             status_code=409,
-            detail="User with this email already exists",
+            detail="User with this email already exists"
         )
-    user = crud.user.create(db, obj_in=body)
+
     return user
 
 
@@ -123,9 +119,13 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
-    user = user_services.get_by_id(db, id=user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        user = user_services.get_by_id(db, id=user_id)
+    except UserNotFound:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
 
     return user
 

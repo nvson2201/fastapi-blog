@@ -8,3 +8,7 @@ class UserNotFound(UserException):
 
 class UserDuplicate(UserException):
     pass
+
+
+class UserForbiddenRegiser(UserException):
+    pass
