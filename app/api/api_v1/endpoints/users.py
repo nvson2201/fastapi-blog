@@ -1,4 +1,5 @@
 from typing import Any, List
+import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -14,6 +15,7 @@ from app.api.deps import (
 from app.services.crud_cache.exceptions import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
+from app.config import settings
 
 router = APIRouter()
 
@@ -23,13 +25,20 @@ def read_users(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
+    date_start: datetime.datetime = settings.START_TIME_DEFAULT,
+    date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
+
+
 ) -> Any:
     """
     Retrieve users by admin.
     """
-    users = user_services.read_users(db, skip=skip, limit=limit)
+    users = user_services.read_users(
+        db, skip=skip, limit=limit,
+        date_start=date_start, date_end=date_end
+    )
     return users
 
 

@@ -1,11 +1,15 @@
-from app.plugins.redis import redis_services
+from typing import List
+import datetime
+
+from sqlalchemy import exc
 from sqlalchemy.orm import Session
+
+from app.plugins.redis import redis_services
 from app.config import settings
 from app import crud
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserCreate
 from .exceptions import UserNotFound, UserDuplicate, UserForbiddenRegiser
-from sqlalchemy import exc
 from app.utils.mail import send_new_account_email
 
 
@@ -89,6 +93,16 @@ class UserServices:
 
         return user
 
-    def read_users(self, db: Session, skip: int = 0, limit: int = 100):
-        users = crud.user.get_multi(db, skip=skip, limit=limit)
+    def read_users(
+        self, db: Session, skip: int = 0, limit: int = 100,
+        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
+        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+    ) -> List[User]:
+
+        users = crud.user.get_multi(
+            db, skip=skip, limit=limit,
+            date_start=date_start,
+            date_end=date_end
+        )
+
         return users

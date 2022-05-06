@@ -1,6 +1,7 @@
 from alembic import op
 import sqlalchemy as sa
-import datetime
+
+from app.config import settings
 
 # revision identifiers, used by Alembic.
 revision = '0004'
@@ -10,12 +11,13 @@ depends_on = None
 
 
 def upgrade():
-    # Add columns create_date and is_banned to users table
+    # Add columns create_date to users table
     op.add_column(
         'users',
-        sa.Column('created_date', sa.DateTime,
-                  default=datetime.datetime.utcnow),
-        sa.Column('is_banned', sa.Boolean(), nullable=True)
+        sa.Column(
+            'created_date', sa.DateTime,
+            default=settings.LOCAL_CURRENT_TIME
+        ),
     ),
 
 

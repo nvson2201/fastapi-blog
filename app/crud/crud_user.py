@@ -1,4 +1,6 @@
+from typing import List
 from typing import Any, Dict, Optional, Union
+import datetime
 
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,7 @@ from app.utils.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.config import settings
 
 
 class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
@@ -13,16 +16,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return db.query(User).filter(User.email == email).first()
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
-        # db_obj = User(
-        #     email=obj_in.email,
-        #     hashed_password=get_password_hash(obj_in.password),
-        #     full_name=obj_in.full_name,
-        #     is_superuser=obj_in.is_superuser,
-        #     is_banned=obj_in.is_banned
-        # )
-
         db_obj = User()
-        exclude_keys_in_user_model = ['password']
+        exclude_keys_in_user_model = ['password', 'created_date']
 
         for key, value in obj_in.__dict__.items():
             if key not in exclude_keys_in_user_model:
@@ -65,6 +60,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
+
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100,
+        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
+        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+    ) -> List[User]:
+        return (
+            db.query(self.model)
+            .filter(
+                User.created_date >= date_start,
+                User.created_date <= date_end
+            )
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
 
 user = CRUDUser(User)

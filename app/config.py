@@ -1,4 +1,5 @@
 import secrets
+import datetime
 
 from pydantic import BaseSettings, EmailStr
 
@@ -25,6 +26,11 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET = "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"
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
+
+    LOCAL_CURRENT_TIME = (datetime.datetime.utcnow() +
+                          datetime.timedelta(hours=7))
+    START_TIME_DEFAULT = datetime.datetime(
+        1, 1, 1, 0, 0, 0, 0) + datetime.timedelta(hours=7)
 
     class Config:
         case_sensitive = True

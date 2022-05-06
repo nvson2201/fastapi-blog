@@ -1,5 +1,5 @@
-import datetime
 from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, validator
 
@@ -10,7 +10,7 @@ class UserBase(BaseModel):
     is_banned: Optional[bool] = False
     is_superuser: bool = False
     full_name: Optional[str] = None
-    created_date: Optional[datetime.datetime] = datetime.datetime.utcnow()
+    created_date: Optional[datetime] = None
 
 
 class UserCreate(UserBase):
