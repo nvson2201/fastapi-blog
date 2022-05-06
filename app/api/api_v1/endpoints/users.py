@@ -9,6 +9,7 @@ from app.services import crud_cache
 from app.api import deps
 from app.utils.mail import send_new_account_email
 from app.config import settings
+from app.services.crud_cache.exceptions import UserNotFound, UserDuplicate
 
 router = APIRouter()
 
@@ -141,20 +142,17 @@ def update_user(
     """
     Update a user.
     """
-    user = user_services.get_by_id(db, id=user_id)
-    if not user:
+    try:
+        user = user_services.update_by_id(db, id=user_id, body=body)
+    except UserNotFound:
         raise HTTPException(
             status_code=404,
             detail="User not found",
         )
-
-    try:
-        user = crud.user.update(db, db_obj=user, obj_in=body)
-    except exc.IntegrityError:
+    except UserDuplicate:
         raise HTTPException(
-            status_code=409, detail="User with this email already exists"
+            status_code=409,
+            detail="User with this email already exists"
         )
-
-    user_services._set_cache(id=user.id, data=user)
 
     return user

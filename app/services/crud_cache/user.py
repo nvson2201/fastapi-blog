@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app import crud
 from app.models.user import User
+from app.schemas.user import UserUpdate
+from .exceptions import UserNotFound, UserDuplicate
+from sqlalchemy import exc
 
 
 class UserServices:
@@ -30,6 +33,19 @@ class UserServices:
             user = User(**cache_data)
         else:
             user = crud.user.get(db, id=id)
-            cache_data = self._set_cache(id=id, data=user)
+            self._set_cache(id=id, data=user)
 
         return user
+
+    def update_by_id(self, db: Session, id: str, body: UserUpdate):
+        user = self.get_by_id(db, id=id)
+        if not user:
+            raise UserNotFound
+        # tao user not found custom exeption ke thua exception
+        # handle multi exception
+        try:
+            user = crud.user.update(db, db_obj=user, obj_in=body)
+        except exc.IntegrityError:
+            raise UserDuplicate
+
+        self._set_cache(id=user.id, data=user)
