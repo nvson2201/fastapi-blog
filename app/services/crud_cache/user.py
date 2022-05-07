@@ -61,6 +61,7 @@ class UserServices:
         return user
 
     def create_user_open(self, body: UserCreate):
+
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
@@ -84,7 +85,7 @@ class UserServices:
     def read_users(
         self, skip: int = 0, limit: int = 100,
         date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+        date_end: datetime.datetime = settings.local_current_time(),
     ) -> List[User]:
 
         users = self.user_redis_decorator.get_multi(

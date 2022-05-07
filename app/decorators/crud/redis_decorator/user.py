@@ -41,14 +41,17 @@ class CRUDRedisUserDecorator(
         self, db: Session, *,
         db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        user = self.crud_component.update(db, obj_in=obj_in)
+        user = self.crud_component.update(db, db_obj=db_obj, obj_in=obj_in)
         self._set_cache(id=user.id, data=user)
+
+        return user
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100,
         date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+        date_end: datetime.datetime = settings.local_current_time(),
     ) -> List[User]:
+
         return self.crud_component.get_multi(
             db, skip=skip, limit=limit,
             date_start=date_start, date_end=date_end

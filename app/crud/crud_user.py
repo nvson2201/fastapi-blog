@@ -24,7 +24,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 setattr(db_obj, key, value)
 
         db_obj.hashed_password = get_password_hash(obj_in.password)
-
+        # db_obj.created_date = (
+        #     datetime.datetime.utcnow() + datetime.timedelta(hours=7))
+        db_obj.created_date = settings.local_current_time()
         # TODO 4 dong cuoi nay co the su dung super ko?
         db.add(db_obj)
         db.commit()
@@ -65,7 +67,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100,
         date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+        date_end: datetime.datetime = settings.local_current_time(),
     ) -> List[User]:
         return (
             db.query(self.model)

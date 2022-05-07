@@ -27,11 +27,15 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
+    UTC_CURRENT_TIME = datetime.datetime.utcnow()
     LOCAL_CURRENT_TIME = (datetime.datetime.utcnow() +
                           datetime.timedelta(hours=7))
+
+    def local_current_time(self):
+        return (datetime.datetime.utcnow() +
+                datetime.timedelta(hours=7))
     # year 1 month 1 day 1
-    START_TIME_DEFAULT = datetime.datetime(
-        1, 1, 1, 0, 0, 0, 0) + datetime.timedelta(hours=7)
+    START_TIME_DEFAULT = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
 
     class Config:
         case_sensitive = True

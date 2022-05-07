@@ -23,7 +23,7 @@ def read_users(
     skip: int = 0,
     limit: int = 100,
     date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-    date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+    date_end: datetime.datetime = settings.local_current_time(),
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
@@ -99,7 +99,7 @@ def create_user_open(
     Create new user without the need to be logged in.
     """
     try:
-        user = user_services.create_user(body=body)
+        user = user_services.create_user_open(body=body)
     except UserForbiddenRegiser:
         raise HTTPException(
             status_code=403,
