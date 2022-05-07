@@ -1,3 +1,4 @@
+from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
 from typing import Generator
 
 from fastapi import Depends, HTTPException
@@ -63,7 +64,12 @@ def get_current_active_superuser(
     return current_user
 
 
+user_redis_decorator = CRUDRedisUserDecorator(
+    crud.user, settings.REDIS_SUFFIX_USER
+)
+
+
 def get_user_services(
     db: Session = Depends(get_db)
 ):
-    return UserServices(db)
+    return UserServices(db, user_redis_decorator)

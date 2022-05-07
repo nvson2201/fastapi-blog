@@ -1,3 +1,5 @@
+from typing import List
+import datetime
 from typing import Any, Dict, Optional, Union
 from sqlalchemy.orm import Session
 
@@ -7,10 +9,13 @@ from app.schemas.user import UserUpdate, UserCreate
 from app.decorators.crud.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.decorators.crud.redis_decorator.base import CRUDRedisDecorator
+from app.config import settings
 
 
-class CRUDRedisUserDecorator(CRUDRedisDecorator[ModelType, CreateSchemaType,
-                                                UpdateSchemaType]):
+class CRUDRedisUserDecorator(
+    CRUDRedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
+):
+
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return self.crud_component.get_by_email(db, email=email)
 
@@ -21,7 +26,8 @@ class CRUDRedisUserDecorator(CRUDRedisDecorator[ModelType, CreateSchemaType,
             user = User(**cache_data)
         else:
             user = self.crud_component.get(db=db, id=id)
-            self._set_cache(id=id, data=user)
+            if user:
+                self._set_cache(id=id, data=user)
 
         return user
 
@@ -35,8 +41,18 @@ class CRUDRedisUserDecorator(CRUDRedisDecorator[ModelType, CreateSchemaType,
         self, db: Session, *,
         db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        user = self.crud_component.create(db, obj_in=obj_in)
+        user = self.crud_component.update(db, obj_in=obj_in)
         self._set_cache(id=user.id, data=user)
+
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100,
+        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
+        date_end: datetime.datetime = settings.LOCAL_CURRENT_TIME,
+    ) -> List[User]:
+        return self.crud_component.get_multi(
+            db, skip=skip, limit=limit,
+            date_start=date_start, date_end=date_end
+        )
 
     def remove(self, db: Session):
         pass

@@ -2,7 +2,6 @@ from typing import Any, List
 import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.services.crud_cache import UserServices
@@ -10,7 +9,6 @@ from app.api.deps import (
     get_current_active_superuser,
     get_current_active_user,
     get_user_services,
-    get_db
 )
 from app.exceptions.user import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
@@ -22,7 +20,6 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.User])
 def read_users(
-    db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
     date_start: datetime.datetime = settings.START_TIME_DEFAULT,
@@ -34,7 +31,7 @@ def read_users(
     Retrieve users by admin.
     """
     users = user_services.read_users(
-        db, skip=skip, limit=limit,
+        skip=skip, limit=limit,
         date_start=date_start, date_end=date_end
     )
     return users
@@ -43,7 +40,6 @@ def read_users(
 @router.post("/", response_model=schemas.User)
 def create_user(
     *,
-    db: Session = Depends(get_db),
     body: schemas.UserCreate,
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
@@ -52,7 +48,7 @@ def create_user(
     Create new user by admin.
     """
     try:
-        user = user_services.create_user(db, body=body)
+        user = user_services.create_user(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -65,7 +61,6 @@ def create_user(
 @router.put("/me", response_model=schemas.User)
 def update_user_me(
     *,
-    db: Session = Depends(get_db),
     body: schemas.UserUpdate,
     current_user: models.User = Depends(get_current_active_user),
     user_services: UserServices = Depends(get_user_services)
@@ -74,7 +69,7 @@ def update_user_me(
     Update own user.
     """
     try:
-        user = user_services.update_by_id(db, id=current_user.id, body=body)
+        user = user_services.update_by_id(id=current_user.id, body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -86,7 +81,6 @@ def update_user_me(
 
 @router.get("/me", response_model=schemas.User)
 def read_user_me(
-    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
     """
@@ -98,7 +92,6 @@ def read_user_me(
 @router.post("/open", response_model=schemas.User)
 def create_user_open(
     *,
-    db: Session = Depends(get_db),
     body: schemas.UserCreate,
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
@@ -106,7 +99,7 @@ def create_user_open(
     Create new user without the need to be logged in.
     """
     try:
-        user = user_services.create_user(db, body=body)
+        user = user_services.create_user(body=body)
     except UserForbiddenRegiser:
         raise HTTPException(
             status_code=403,
@@ -125,14 +118,13 @@ def create_user_open(
 def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Get a specific user by id.
     """
     try:
-        user = user_services.get_by_id(db, id=user_id)
+        user = user_services.get_by_id(id=user_id)
     except UserNotFound:
         raise HTTPException(
             status_code=404,
@@ -145,7 +137,6 @@ def read_user_by_id(
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user(
     *,
-    db: Session = Depends(get_db),
     user_id: int,
     body: schemas.UserUpdate,
     current_user: models.User = Depends(get_current_active_superuser),
@@ -155,7 +146,7 @@ def update_user(
     Update a specific user by id.
     """
     try:
-        user = user_services.update_by_id(db, id=user_id, body=body)
+        user = user_services.update_by_id(id=user_id, body=body)
     except UserNotFound:
         raise HTTPException(
             status_code=404,
