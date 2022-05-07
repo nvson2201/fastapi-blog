@@ -28,8 +28,6 @@ class Settings(BaseSettings):
     REDIS_PASSWORD = "123456"
 
     UTC_CURRENT_TIME = datetime.datetime.utcnow()
-    LOCAL_CURRENT_TIME = (datetime.datetime.utcnow() +
-                          datetime.timedelta(hours=7))
 
     def local_current_time(self):
         return (datetime.datetime.utcnow() +

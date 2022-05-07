@@ -1,11 +1,11 @@
 from typing import List
 import datetime
 from typing import Any, Dict, Optional, Union
+
 from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserCreate
-
 from app.decorators.crud.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.decorators.crud.redis_decorator.base import CRUDRedisDecorator

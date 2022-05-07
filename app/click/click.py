@@ -7,8 +7,8 @@ from app.services.crud_cache import UserServices
 from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
 from app.config import settings
 from app import crud
-db = next(deps.get_db())
 
+db = next(deps.get_db())
 
 user_redis_decorator = CRUDRedisUserDecorator(
     crud.user, settings.REDIS_SUFFIX_USER

@@ -6,7 +6,6 @@ from app.models.user import User
 
 from app.decorators.crud.decorator import (
     CRUDDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
-
 from app.decorators.crud.component import CRUDComponent
 
 

@@ -24,14 +24,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 setattr(db_obj, key, value)
 
         db_obj.hashed_password = get_password_hash(obj_in.password)
-        # db_obj.created_date = (
-        #     datetime.datetime.utcnow() + datetime.timedelta(hours=7))
         db_obj.created_date = settings.local_current_time()
-        # TODO 4 dong cuoi nay co the su dung super ko?
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+
+        return super().create(db, obj_in=db_obj)
 
     def update(
         self, db: Session, *,

@@ -1,12 +1,11 @@
-
 from fastapi import FastAPI, Request
-from app.api.api_v1.api import api_router
-from app.config import settings
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
-from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.sessions import SessionMiddleware
 
+from app.api.api_v1.api import api_router
+from app.config import settings
 
 app = FastAPI()
 app.include_router(api_router, prefix=settings.API_V1_STR)
