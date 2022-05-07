@@ -25,6 +25,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         db_obj.hashed_password = get_password_hash(obj_in.password)
 
+        # TODO 4 dong cuoi nay co the su dung super ko?
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

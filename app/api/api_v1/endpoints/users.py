@@ -12,7 +12,7 @@ from app.api.deps import (
     get_user_services,
     get_db
 )
-from app.services.crud_cache.exceptions import (
+from app.exceptions.user import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.config import settings

@@ -9,7 +9,8 @@ from app.config import settings
 from app import crud
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserCreate
-from .exceptions import UserNotFound, UserDuplicate, UserForbiddenRegiser
+from app.exceptions.user import (
+    UserNotFound, UserDuplicate, UserForbiddenRegiser)
 from app.utils.mail import send_new_account_email
 
 
