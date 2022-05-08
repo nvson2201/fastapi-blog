@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Union
 import datetime
 
 from sqlalchemy import exc
@@ -11,17 +11,18 @@ from app.exceptions.user import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser)
 from app.utils.mail import send_new_account_email
 from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
+from app.crud.crud_user import CRUDUser
 
 
 class UserServices:
 
     def __init__(self, db: Session,
-                 user_redis_decorator: CRUDRedisUserDecorator):
+                 crud_engine: Union[CRUDRedisUserDecorator, CRUDUser]):
         self.db = db
-        self.user_redis_decorator = user_redis_decorator
+        self.crud_engine = crud_engine
 
     def get_by_id(self, id: str):
-        user = self.user_redis_decorator.get(self.db, id=id)
+        user = self.crud_engine.get(self.db, id=id)
 
         if not user:
             raise UserNotFound
@@ -29,13 +30,13 @@ class UserServices:
         return user
 
     def update_by_id(self, id: str, body: UserUpdate):
-        user = self.user_redis_decorator.get(self.db, id=id)
+        user = self.crud_engine.get(self.db, id=id)
 
         if not user:
             raise UserNotFound
 
         try:
-            user = self.user_redis_decorator.update(
+            user = self.crud_engine.update(
                 self.db, db_obj=user, obj_in=body)
         except exc.IntegrityError:
             raise UserDuplicate
@@ -43,13 +44,13 @@ class UserServices:
         return user
 
     def create_user(self, body: UserCreate):
-        user = self.user_redis_decorator.get_by_email(
+        user = self.crud_engine.get_by_email(
             self.db, email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.user_redis_decorator.create(self.db, obj_in=body)
+        user = self.crud_engine.create(self.db, obj_in=body)
 
         if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
@@ -65,13 +66,13 @@ class UserServices:
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
-        user = self.user_redis_decorator.get_by_email(
+        user = self.crud_engine.get_by_email(
             self.db, email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.user_redis_decorator.create(self.db, obj_in=body)
+        user = self.crud_engine.create(self.db, obj_in=body)
 
         if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
@@ -88,7 +89,7 @@ class UserServices:
         date_end: datetime.datetime = settings.local_current_time(),
     ) -> List[User]:
 
-        users = self.user_redis_decorator.get_multi(
+        users = self.crud_engine.get_multi(
             self.db, skip=skip, limit=limit,
             date_start=date_start,
             date_end=date_end

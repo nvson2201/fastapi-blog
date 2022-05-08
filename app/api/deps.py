@@ -64,7 +64,7 @@ def get_current_active_superuser(
     return current_user
 
 
-user_redis_decorator = CRUDRedisUserDecorator(
+crud_engine = CRUDRedisUserDecorator(
     crud.user, settings.REDIS_SUFFIX_USER
 )
 
@@ -72,4 +72,4 @@ user_redis_decorator = CRUDRedisUserDecorator(
 def get_user_services(
     db: Session = Depends(get_db)
 ):
-    return UserServices(db, user_redis_decorator)
+    return UserServices(db, crud_engine=crud_engine)
