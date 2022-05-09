@@ -1,4 +1,4 @@
-from app.decorators.crud.component import (
+from app.decorators.component import (
     CRUDComponent, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
