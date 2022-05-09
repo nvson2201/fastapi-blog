@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas
+from app.db import repositories
 from app.api.dependencies import authentication
 from app.api.dependencies.database import get_db
 from app.utils import security
@@ -28,13 +29,13 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.user.authenticate(
+    user = repositories.user.authenticate(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
         raise HTTPException(
             status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_active(user):
+    elif not repositories.user.is_active(user):
         raise HTTPException(status_code=403, detail="Inactives user")
     access_token_expires = timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -60,7 +61,7 @@ def recover_password(email: str, db: Session = Depends(get_db)) -> Any:
     """
     Password Recovery
     """
-    user = crud.user.get_by_email(db, email=email)
+    user = repositories.user.get_by_email(db, email=email)
 
     if not user:
         raise HTTPException(
@@ -87,13 +88,13 @@ def reset_password(
     id = verify_password_reset_token(token)
     if not id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    user = crud.user.get(db, id=id)
+    user = repositories.user.get(db, id=id)
     if not user:
         raise HTTPException(
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
-    elif not crud.user.is_active(user):
+    elif not repositories.user.is_active(user):
         raise HTTPException(status_code=403, detail="Inactive user")
     hashed_password = get_password_hash(new_password.body)
     user.hashed_password = hashed_password

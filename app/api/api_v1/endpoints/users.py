@@ -3,12 +3,12 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
-from app.services.crud_cache import UserServices
+from app.services.user import UserServices
 from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
-    get_user_services,
 )
+from app.api.dependencies.user_services import get_user_services
 from app.exceptions.user import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )

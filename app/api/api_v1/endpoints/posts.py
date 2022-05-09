@@ -3,7 +3,8 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas
+from app.db import repositories
 from app.api.dependencies import authentication
 from app.api.dependencies.database import get_db
 
@@ -21,10 +22,10 @@ def read_posts(
     """
     Retrieve posts.
     """
-    if crud.user.is_superuser(current_user):
-        posts = crud.post.get_multi(db, skip=skip, limit=limit)
+    if repositories.user.is_superuser(current_user):
+        posts = repositories.post.get_multi(db, skip=skip, limit=limit)
     else:
-        posts = crud.post.get_multi_by_owner(
+        posts = repositories.post.get_multi_by_owner(
             db=db, owner_id=current_user.id, skip=skip, limit=limit
         )
     return posts
@@ -41,7 +42,7 @@ def create_post(
     """
     Create new post.
     """
-    post = crud.post.create_with_owner(
+    post = repositories.post.create_with_owner(
         db=db, obj_in=body, owner_id=current_user.id)
     return post
 
@@ -58,13 +59,13 @@ def update_post(
     """
     Update an post.
     """
-    post = crud.post.get(db=db, id=id)
+    post = repositories.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if (not crud.user.is_superuser(current_user)
+    if (not repositories.user.is_superuser(current_user)
             and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = crud.post.update(db=db, db_obj=post, obj_in=body)
+    post = repositories.post.update(db=db, db_obj=post, obj_in=body)
     return post
 
 
@@ -79,10 +80,10 @@ def read_post(
     """
     Get post by ID.
     """
-    post = crud.post.get(db=db, id=id)
+    post = repositories.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if (not crud.user.is_superuser(current_user)
+    if (not repositories.user.is_superuser(current_user)
             and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return post
@@ -99,11 +100,11 @@ def delete_post(
     """
     Delete an post.
     """
-    post = crud.post.get(db=db, id=id)
+    post = repositories.post.get(db=db, id=id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    if (not crud.user.is_superuser(current_user)
+    if (not repositories.user.is_superuser(current_user)
             and (post.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = crud.post.remove(db=db, id=id)
+    post = repositories.post.remove(db=db, id=id)
     return post

@@ -3,7 +3,8 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app import crud, models, schemas
+from app import models, schemas
+from app.db import repositories
 from app.api.dependencies import authentication
 from app.api.dependencies.database import get_db
 router = APIRouter()
@@ -22,10 +23,10 @@ def read_comments(
     """
     Retrieve comments.
     """
-    if crud.user.is_superuser(current_user):
-        comments = crud.comment.get_multi(db, skip=skip, limit=limit)
+    if repositories.user.is_superuser(current_user):
+        comments = repositories.comment.get_multi(db, skip=skip, limit=limit)
     else:
-        comments = crud.comment.get_multi_by_owner(
+        comments = repositories.comment.get_multi_by_owner(
             db=db, owner_id=current_user.id, skip=skip,
             limit=limit, contain_id=post_id
         )
@@ -46,7 +47,7 @@ def create_comment(
     """
     Create new comment.
     """
-    comment = crud.comment.create_with_owner(
+    comment = repositories.comment.create_with_owner(
         db=db, obj_in=body, owner_id=current_user.id, contain_id=post_id)
     return comment
 
@@ -63,13 +64,13 @@ def update_comment(
     """
     Update an comment.
     """
-    comment = crud.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db=db, id=id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
-    if (not crud.user.is_superuser(current_user) and
+    if (not repositories.user.is_superuser(current_user) and
             (comment.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    comment = crud.comment.update(db=db, db_obj=comment, obj_in=body)
+    comment = repositories.comment.update(db=db, db_obj=comment, obj_in=body)
     return comment
 
 
@@ -84,10 +85,10 @@ def read_comment(
     """
     Get comment by ID.
     """
-    comment = crud.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db=db, id=id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
-    if (not crud.user.is_superuser(current_user)
+    if (not repositories.user.is_superuser(current_user)
             and (comment.owner_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return comment
@@ -104,11 +105,11 @@ def delete_comment(
     """
     Delete an comment.
     """
-    comment = crud.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db=db, id=id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
-    if (not crud.user.is_superuser(current_user) and
+    if (not repositories.user.is_superuser(current_user) and
             comment.owner_id != current_user.id):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    comment = crud.comment.remove(db=db, id=id)
+    comment = repositories.comment.remove(db=db, id=id)
     return comment

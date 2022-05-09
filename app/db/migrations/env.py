@@ -1,4 +1,4 @@
-from app.db.base import Base
+from app.plugins.mysql.base import Base
 import os
 from alembic import context
 from sqlalchemy import pool

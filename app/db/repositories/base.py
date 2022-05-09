@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from app.decorators.crud.component import (
+from app.decorators.component import (
     CRUDComponent, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
