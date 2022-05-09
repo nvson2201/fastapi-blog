@@ -1,5 +1,4 @@
 from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
-from typing import Generator
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -10,20 +9,13 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.utils import security
 from app.config import settings
-from app.db.session import SessionLocal
 from app.services.crud_cache import UserServices
+from app.api.dependencies.database import get_db
+
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
-
-
-def get_db() -> Generator:
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
 
 
 def get_current_user(
@@ -31,7 +23,6 @@ def get_current_user(
     token: str = Depends(reusable_oauth2)
 ) -> models.User:
 
-    print(token)
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]

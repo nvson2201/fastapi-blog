@@ -4,18 +4,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.api import deps
-
+from app.api.dependencies import authentication
+from app.api.dependencies.database import get_db
 router = APIRouter()
 
 
 @router.get("/", response_model=List[schemas.Comment])
 def read_comments(
     post_id: int,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 
 ) -> Any:
     """
@@ -34,10 +35,11 @@ def read_comments(
 @ router.post("/", response_model=schemas.Comment)
 def create_comment(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     post_id: int,
     body: schemas.CommentCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 
 
 ) -> Any:
@@ -52,10 +54,11 @@ def create_comment(
 @ router.put("/{id}", response_model=schemas.Comment)
 def update_comment(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
     body: schemas.CommentUpdate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Update an comment.
@@ -73,9 +76,10 @@ def update_comment(
 @router.get("/{id}", response_model=schemas.Comment)
 def read_comment(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Get comment by ID.
@@ -92,9 +96,10 @@ def read_comment(
 @router.delete("/{id}", response_model=schemas.Comment)
 def delete_comment(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Delete an comment.

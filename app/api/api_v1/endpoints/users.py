@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
 from app.services.crud_cache import UserServices
-from app.api.deps import (
+from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
     get_user_services,

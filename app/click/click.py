@@ -2,13 +2,14 @@ from urllib import error
 
 import click
 
-from app.api import deps
+from app.api.dependencies import authentication
+from app.api.dependencies.database import get_db
 from app.services.crud_cache import UserServices
 from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
 from app.config import settings
 from app import crud
 
-db = next(deps.get_db())
+db = next(get_db())
 
 crud_engine = CRUDRedisUserDecorator(
     crud.user, settings.REDIS_SUFFIX_USER

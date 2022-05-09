@@ -6,7 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api.dependencies import authentication
+from app.api.dependencies.database import get_db
 from app.utils import security
 from app.config import settings
 from app.utils.security import get_password_hash
@@ -21,7 +22,7 @@ router = APIRouter()
 
 @router.post("/login/access-token", response_model=schemas.Token)
 def login_access_token(
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
     """
@@ -47,7 +48,7 @@ def login_access_token(
 
 @router.post("/login/test-token", response_model=schemas.User)
 def test_token(current_user: models.User
-               = Depends(deps.get_current_active_user)) -> Any:
+               = Depends(authentication.get_current_active_user)) -> Any:
     """
     Test access token
     """
@@ -55,7 +56,7 @@ def test_token(current_user: models.User
 
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
-def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
+def recover_password(email: str, db: Session = Depends(get_db)) -> Any:
     """
     Password Recovery
     """
@@ -77,7 +78,7 @@ def recover_password(email: str, db: Session = Depends(deps.get_db)) -> Any:
 def reset_password(
     token: str,
     new_password: schemas.UserPassword,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
 ) -> Any:
     """
     Reset password

@@ -4,17 +4,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api.dependencies import authentication
+from app.api.dependencies.database import get_db
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[schemas.Post])
 def read_posts(
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Retrieve posts.
@@ -31,9 +33,10 @@ def read_posts(
 @router.post("/", response_model=schemas.Post)
 def create_post(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     body: schemas.PostCreate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Create new post.
@@ -46,10 +49,11 @@ def create_post(
 @router.put("/{id}", response_model=schemas.Post)
 def update_post(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
     body: schemas.PostUpdate,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Update an post.
@@ -67,9 +71,10 @@ def update_post(
 @router.get("/{id}", response_model=schemas.Post)
 def read_post(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Get post by ID.
@@ -86,9 +91,10 @@ def read_post(
 @router.delete("/{id}", response_model=schemas.Post)
 def delete_post(
     *,
-    db: Session = Depends(deps.get_db),
+    db: Session = Depends(get_db),
     id: int,
-    current_user: models.User = Depends(deps.get_current_active_user),
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
 ) -> Any:
     """
     Delete an post.
