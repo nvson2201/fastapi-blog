@@ -27,8 +27,11 @@ def get_db() -> Generator:
 
 
 def get_current_user(
-    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
+    db: Session = Depends(get_db),
+    token: str = Depends(reusable_oauth2)
 ) -> models.User:
+
+    print(token)
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
@@ -39,7 +42,9 @@ def get_current_user(
             status_code=401,
             detail="Could not validate credentials",
         )
+
     user = crud.user.get(db, id=token_data.sub)
+
     if not user:
         raise HTTPException(
             status_code=404, detail="User not found")
