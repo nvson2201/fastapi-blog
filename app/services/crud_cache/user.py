@@ -1,5 +1,4 @@
 from typing import List, Union
-import datetime
 
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -12,6 +11,7 @@ from app.exceptions.user import (
 from app.utils.mail import send_new_account_email
 from app.decorators.crud.redis_decorator.user import CRUDRedisUserDecorator
 from app.crud.crud_user import CRUDUser
+from app.schemas.datetime import DateTime
 
 
 class UserServices:
@@ -85,8 +85,8 @@ class UserServices:
 
     def read_users(
         self, skip: int = 0, limit: int = 100,
-        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.local_current_time(),
+        date_start: DateTime = None,
+        date_end: DateTime = None,
     ) -> List[User]:
 
         users = self.crud_engine.get_multi(

@@ -1,5 +1,4 @@
 from typing import Any, List
-import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -13,7 +12,7 @@ from app.api.deps import (
 from app.exceptions.user import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
-from app.config import settings
+from app.schemas.datetime import DateTime
 
 router = APIRouter()
 
@@ -22,8 +21,8 @@ router = APIRouter()
 def read_users(
     skip: int = 0,
     limit: int = 100,
-    date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-    date_end: datetime.datetime = settings.local_current_time(),
+    date_start: DateTime = None,
+    date_end: DateTime = None,
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:

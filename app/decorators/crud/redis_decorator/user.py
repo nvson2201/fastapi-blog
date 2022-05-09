@@ -1,6 +1,4 @@
-from typing import List
-import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 
 from sqlalchemy.orm import Session
 
@@ -9,7 +7,7 @@ from app.schemas.user import UserUpdate, UserCreate
 from app.decorators.crud.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.decorators.crud.redis_decorator.base import CRUDRedisDecorator
-from app.config import settings
+from app.schemas.datetime import DateTime
 
 
 class CRUDRedisUserDecorator(
@@ -48,8 +46,8 @@ class CRUDRedisUserDecorator(
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100,
-        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.local_current_time(),
+        date_start: DateTime = None,
+        date_end: DateTime = None,
     ) -> List[User]:
 
         return self.crud_component.get_multi(

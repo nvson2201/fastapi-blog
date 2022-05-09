@@ -1,6 +1,5 @@
 from typing import List
 from typing import Any, Dict, Optional, Union
-import datetime
 
 from sqlalchemy.orm import Session
 
@@ -8,6 +7,7 @@ from app.utils.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.datetime import DateTime
 from app.config import settings
 
 
@@ -24,7 +24,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 setattr(db_obj, key, value)
 
         db_obj.hashed_password = get_password_hash(obj_in.password)
-        db_obj.created_date = settings.local_current_time()
+        db_obj.created_date = settings.current_time()
 
         return super().create(db, obj_in=db_obj)
 
@@ -61,19 +61,24 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100,
-        date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-        date_end: datetime.datetime = settings.local_current_time(),
+        date_start: DateTime = None,
+        date_end: DateTime = None,
     ) -> List[User]:
-        return (
-            db.query(self.model)
-            .filter(
-                User.created_date >= date_start,
-                User.created_date <= date_end
-            )
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+
+        q = db.query(self.model)
+
+        if date_start is None:
+            date_start = DateTime(datetime=settings.past_week())
+        q = q.filter(User.created_date >= date_start.datetime)
+
+        if date_end is None:
+            date_end = DateTime(datetime=settings.current_time())
+        q = q.filter(User.created_date <= date_end.datetime)
+
+        q = q.limit(limit)
+        q = q.offset(skip)
+
+        return q.all()
 
 
 user = CRUDUser(User)
