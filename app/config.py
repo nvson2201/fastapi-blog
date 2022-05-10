@@ -27,9 +27,10 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
-    UTC_CURRENT_TIME = datetime.datetime.utcnow()
+    def past_week(self):
+        return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
 
-    def local_current_time(self):
+    def current_time(self):
         return (datetime.datetime.utcnow() +
                 datetime.timedelta(hours=7))
     # year 1 month 1 day 1

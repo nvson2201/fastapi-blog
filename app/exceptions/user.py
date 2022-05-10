@@ -12,3 +12,15 @@ class UserDuplicate(ObjectDuplicate):
 
 class UserForbiddenRegiser(ObjectForbidden):
     pass
+
+
+class UserInvalidCredentials(Exception):
+    pass
+
+
+class UserInactive(Exception):
+    pass
+
+
+class UserNotSuper(Exception):
+    pass
