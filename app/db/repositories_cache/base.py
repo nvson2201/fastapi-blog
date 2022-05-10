@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from app.plugins.redis import redis_services
 from app.models.user import User
 
-from app.decorators.crud.decorator import (
+from app.decorators.decorator import (
     CRUDDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
-from app.decorators.crud.component import CRUDComponent
+from app.decorators.component import CRUDComponent
 
 
 class CRUDRedisDecorator(CRUDDecorator[ModelType, CreateSchemaType,

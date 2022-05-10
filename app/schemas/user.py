@@ -72,3 +72,25 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     hashed_password: str
+
+
+class UserPassword(BaseModel):
+    body: str
+
+    @validator('body')
+    def password_validate(cls, v):
+        if len(v) < 8:
+            raise ValueError('Length should be at least 8')
+
+        if not any(char.isdigit() for char in v):
+            raise ValueError('Password should have at least one numeral')
+
+        if not any(char.isupper() for char in v):
+            raise ValueError(
+                'Password should have at least one uppercase letter')
+
+        if not any(char.islower() for char in v):
+            raise ValueError(
+                'Password should have at least one lowercase letter')
+
+        return v
