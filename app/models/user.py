@@ -16,9 +16,9 @@ class User(Base):
     is_banned = Column(Boolean(), default=False)
 
     posts = relationship(
-        "Post", back_populates="owner", cascade="all,delete")
+        "Post", back_populates="author", cascade="all,delete")
     comments = relationship(
-        "Comment", back_populates="owner", cascade="all,delete")
+        "Comment", back_populates="author", cascade="all,delete")
 
     def __repr__(self):
         return f"""

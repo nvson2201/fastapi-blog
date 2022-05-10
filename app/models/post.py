@@ -14,11 +14,11 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(50))
     body = Column(String(255))
-    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    owner = relationship("User", back_populates="posts")
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    author = relationship("User", back_populates="posts")
 
     comments = relationship(
-        "Comment", back_populates="contain", cascade="all,delete")
+        "Comment", back_populates="post", cascade="all,delete")
 
     def __repr__(self):
         return f"{self.title}"
