@@ -10,7 +10,8 @@ class UserBase(BaseModel):
     is_banned: Optional[bool] = False
     is_superuser: bool = False
     full_name: Optional[str] = None
-    created_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class UserCreate(UserBase):

@@ -17,14 +17,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User()
-        exclude_keys_in_user_model = ['password', 'created_date']
+        exclude_keys_in_user_model = ['password', 'created_at']
 
         for key, value in obj_in.__dict__.items():
             if key not in exclude_keys_in_user_model:
                 setattr(db_obj, key, value)
 
         db_obj.hashed_password = get_password_hash(obj_in.password)
-        db_obj.created_date = settings.current_time()
+        db_obj.created_at = settings.current_time()
 
         return super().create(db, obj_in=db_obj)
 
@@ -69,11 +69,11 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
         if date_start is None:
             date_start = DateTime(datetime=settings.past_week())
-        q = q.filter(User.created_date >= date_start.datetime)
+        q = q.filter(User.created_at >= date_start.datetime)
 
         if date_end is None:
             date_end = DateTime(datetime=settings.current_time())
-        q = q.filter(User.created_date <= date_end.datetime)
+        q = q.filter(User.created_at <= date_end.datetime)
 
         q = q.limit(limit)
         q = q.offset(skip)

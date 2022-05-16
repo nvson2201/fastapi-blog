@@ -26,7 +26,7 @@ def read_posts(
         posts = repositories.post.get_multi(db, skip=skip, limit=limit)
     else:
         posts = repositories.post.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip, limit=limit
+            db=db, author_id=current_user.id, skip=skip, limit=limit
         )
     return posts
 
@@ -43,7 +43,7 @@ def create_post(
     Create new post.
     """
     post = repositories.post.create_with_owner(
-        db=db, obj_in=body, owner_id=current_user.id)
+        db=db, obj_in=body, author_id=current_user.id)
     return post
 
 
@@ -63,7 +63,7 @@ def update_post(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if (not repositories.user.is_superuser(current_user)
-            and (post.owner_id != current_user.id)):
+            and (post.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     post = repositories.post.update(db=db, db_obj=post, obj_in=body)
     return post
@@ -84,7 +84,7 @@ def read_post(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if (not repositories.user.is_superuser(current_user)
-            and (post.owner_id != current_user.id)):
+            and (post.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return post
 
@@ -104,7 +104,7 @@ def delete_post(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if (not repositories.user.is_superuser(current_user)
-            and (post.owner_id != current_user.id)):
+            and (post.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     post = repositories.post.remove(db=db, id=id)
     return post

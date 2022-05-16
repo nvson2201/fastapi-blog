@@ -21,7 +21,7 @@ class PostInDBBase(PostBase):
     id: int
     title: str
     body: str
-    owner_id: int
+    author_id: int
 
     class Config:
         orm_mode = True

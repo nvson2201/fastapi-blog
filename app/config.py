@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
-    FIRST_SUPERUSER_PASSWORD: str = "1234567"
+    FIRST_SUPERUSER: EmailStr = "nguyenvanson22@gapo.com.vn"
+    FIRST_SUPERUSER_PASSWORD: str = "1234567AA22a"
     USERS_OPEN_REGISTRATION: bool = False
 
     DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa

@@ -16,11 +16,11 @@ class Comment(Base):
     id = Column(Integer, primary_key=True, index=True)
     body = Column(String(255))
 
-    contain_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
-    contain = relationship("Post", back_populates="comments")
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
+    post = relationship("Post", back_populates="comments")
 
-    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    owner = relationship("User", back_populates="comments")
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    author = relationship("User", back_populates="comments")
 
     def __repr__(self):
         return f"{self.body}"

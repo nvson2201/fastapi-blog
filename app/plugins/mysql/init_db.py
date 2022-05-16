@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.plugins.mysql import schemas
+from app import schemas
 
 from app.db import repositories
 from app.plugins.mysql import base  # noqa: F401
