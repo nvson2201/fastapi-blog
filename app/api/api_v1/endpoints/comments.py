@@ -27,8 +27,8 @@ def read_comments(
         comments = repositories.comment.get_multi(db, skip=skip, limit=limit)
     else:
         comments = repositories.comment.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip,
-            limit=limit, contain_id=post_id
+            db=db, author_id=current_user.id, skip=skip,
+            limit=limit, post_id=post_id
         )
     return comments
 
@@ -48,7 +48,7 @@ def create_comment(
     Create new comment.
     """
     comment = repositories.comment.create_with_owner(
-        db=db, obj_in=body, owner_id=current_user.id, contain_id=post_id)
+        db=db, obj_in=body, author_id=current_user.id, post_id=post_id)
     return comment
 
 
@@ -68,7 +68,7 @@ def update_comment(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.user.is_superuser(current_user) and
-            (comment.owner_id != current_user.id)):
+            (comment.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     comment = repositories.comment.update(db=db, db_obj=comment, obj_in=body)
     return comment
@@ -89,7 +89,7 @@ def read_comment(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.user.is_superuser(current_user)
-            and (comment.owner_id != current_user.id)):
+            and (comment.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     return comment
 
@@ -109,7 +109,7 @@ def delete_comment(
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.user.is_superuser(current_user) and
-            comment.owner_id != current_user.id):
+            comment.author_id != current_user.id):
         raise HTTPException(status_code=403, detail="Not enough permissions")
     comment = repositories.comment.remove(db=db, id=id)
     return comment
