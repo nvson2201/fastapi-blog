@@ -3,12 +3,12 @@ from typing import List
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from app.db.repositories.base import CRUDBase
+from app.db.repositories.base import BaseRepository
 from app.models.comment import Comment
 from app.schemas.comment import CommentCreate, CommentUpdate
 
 
-class CRUDComment(CRUDBase[Comment, CommentCreate, CommentUpdate]):
+class CommentRepository(BaseRepository[Comment, CommentCreate, CommentUpdate]):
     def create_with_owner(
         self, db: Session, *, obj_in: CommentCreate,
         author_id: int, post_id: int
@@ -35,4 +35,4 @@ class CRUDComment(CRUDBase[Comment, CommentCreate, CommentUpdate]):
         )
 
 
-comment = CRUDComment(Comment)
+comments = CommentRepository(Comment)

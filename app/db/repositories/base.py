@@ -4,10 +4,11 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.decorators.component import (
-    CRUDComponent, ModelType, CreateSchemaType, UpdateSchemaType)
+    ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
-class CRUDBase(CRUDComponent[ModelType, CreateSchemaType, UpdateSchemaType]):
+class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
+                                         UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         """
         CRUD object with default methods to

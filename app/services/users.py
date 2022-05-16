@@ -8,21 +8,21 @@ from pydantic import ValidationError
 from app.config import settings
 from app.models.user import User
 from app.schemas.user import UserUpdate, UserCreate
-from app.exceptions.user import (
+from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser,
     UserInvalidCredentials, UserInactive, UserNotSuper)
 from app.utils.mail import send_new_account_email
-from app.db.repositories_cache.user import CRUDRedisUserDecorator
-from app.db.repositories.crud_user import CRUDUser
+from app.db.repositories_cache.users import UserRedisRepository
+from app.db.repositories.users import UserRepository
 from app.schemas.datetime import DateTime
 from app.utils import security
-from app import schemas
+from app.schemas.token import TokenPayload
 
 
 class UserServices:
 
     def __init__(self, db: Session,
-                 crud_engine: Union[CRUDRedisUserDecorator, CRUDUser]):
+                 crud_engine: Union[UserRedisRepository, UserRepository]):
         self.db = db
         self.crud_engine = crud_engine
 
@@ -103,12 +103,13 @@ class UserServices:
         return users
 
     def get_current_user(self, token: str):
-
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         try:
             payload = jwt.decode(
                 token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
             )
-            token_data = schemas.TokenPayload(**payload)
+            token_data = TokenPayload(**payload)
+
         except (jwt.JWTError, ValidationError):
             raise UserInvalidCredentials
 

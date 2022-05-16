@@ -3,14 +3,14 @@ from urllib import error
 import click
 
 from app.api.dependencies.database import get_db
-from app.services.user import UserServices
-from app.db.repositories_cache.user import CRUDRedisUserDecorator
+from app.services.users import UserServices
+from app.db.repositories_cache.users import UserRedisRepository
 from app.config import settings
 from app.db import repositories
 
 db = next(get_db())
 
-crud_engine = CRUDRedisUserDecorator(
+crud_engine = UserRedisRepository(
     repositories.user, settings.REDIS_SUFFIX_USER
 )
 

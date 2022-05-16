@@ -1,3 +1,3 @@
-from .crud_post import post  # noqa
-from .crud_user import user  # noqa
-from .crud_comment import comment  # noqa
+from .posts import posts  # noqa
+from .users import users  # noqa
+from .comments import comments  # noqa

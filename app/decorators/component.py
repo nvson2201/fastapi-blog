@@ -9,7 +9,8 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-class CRUDComponent(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class ComponentRepository(Generic[ModelType, CreateSchemaType,
+                                  UpdateSchemaType]):
     def get(self):
         pass
 

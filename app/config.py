@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
+    KAFKA_BROKER_URL = {'bootstrap.servers': 'localhost: 9092'}
+
     def past_week(self):
         return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
 
