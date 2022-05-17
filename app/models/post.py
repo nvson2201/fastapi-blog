@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 class Post(Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
+    views = Column(Integer)
     title = Column(String(50))
     body = Column(String(255))
     created_at = Column(DateTime)

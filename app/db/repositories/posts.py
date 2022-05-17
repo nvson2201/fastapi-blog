@@ -14,6 +14,7 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     ) -> Post:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data, author_id=author_id)
+        db_obj.views = 0
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

@@ -2,7 +2,6 @@ from typing import Any, Dict, Optional, Union
 from sqlalchemy.orm import Session
 
 from app.plugins.redis import redis_services
-from app.models.user import User
 
 from app.decorators.decorator import (
     RepositoryDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
@@ -22,7 +21,7 @@ class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
             suffix=self.suffix
         )
 
-    def _set_cache(self, id: str, data: User):
+    def _set_cache(self, id: str, data):
         redis_services.set_cache(
             id=str(id),
             suffix=self.suffix,

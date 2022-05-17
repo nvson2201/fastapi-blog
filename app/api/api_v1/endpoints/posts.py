@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app import models, schemas
 from app.db import repositories
 from app.api.dependencies import authentication
+from app.exceptions.posts import PostNotFound
 from app.api.dependencies.post_services import get_post_services
 from app.services.posts import PostServices
 router = APIRouter()
@@ -75,12 +76,10 @@ def read_post(
     """
     Get post by ID.
     """
-    post = post_services.get(id=id)
-    if not post:
+    try:
+        post = post_services.get(id=id)
+    except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
-    if (not repositories.users.is_superuser(current_user)
-            and (post.author_id != current_user.id)):
-        raise HTTPException(status_code=403, detail="Not enough permissions")
     return post
 
 
@@ -95,11 +94,8 @@ def delete_post(
     """
     Delete an post.
     """
-    post = post_services.get(id=id)
-    if not post:
+    try:
+        post = post_services.remove(id=id)
+    except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
-    if (not repositories.users.is_superuser(current_user)
-            and (post.author_id != current_user.id)):
-        raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = post_services.remove(id=id)
     return post

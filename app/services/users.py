@@ -47,7 +47,7 @@ class UserServices:
 
         return user
 
-    def update(self, id: str, body: UserUpdate) -> User:
+    def update(self, id: str, obj_in: UserUpdate) -> User:
         user = self.crud_engine.get(self.db, id=id)
 
         if not user:
@@ -55,48 +55,48 @@ class UserServices:
 
         try:
             user = self.crud_engine.update(
-                self.db, db_obj=user, obj_in=body)
+                self.db, db_obj=user, obj_in=obj_in)
         except exc.IntegrityError:
             raise UserDuplicate
 
         return user
 
-    def create(self, body: UserCreate) -> User:
+    def create(self, obj_in: UserCreate) -> User:
         user = self.crud_engine.get_by_email(
-            self.db, email=body.email)
+            self.db, email=obj_in.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(self.db, obj_in=body)
+        user = self.crud_engine.create(self.db, obj_in=obj_in)
 
-        if settings.EMAILS_ENABLED and body.email:
+        if settings.EMAILS_ENABLED and obj_in.email:
             send_new_account_email(
-                email_to=body.email,
-                username=body.email,
-                password=body.password
+                email_to=obj_in.email,
+                username=obj_in.email,
+                password=obj_in.password
             )
 
         return user
 
-    def create_user_open(self, body: UserCreate) -> User:
+    def create_user_open(self, obj_in: UserCreate) -> User:
 
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
         user = self.crud_engine.get_by_email(
-            self.db, email=body.email)
+            self.db, email=obj_in.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(self.db, obj_in=body)
+        user = self.crud_engine.create(self.db, obj_in=obj_in)
 
-        if settings.EMAILS_ENABLED and body.email:
+        if settings.EMAILS_ENABLED and obj_in.email:
             send_new_account_email(
-                email_to=body.email,
-                username=body.email,
-                password=body.password
+                email_to=obj_in.email,
+                username=obj_in.email,
+                password=obj_in.password
             )
 
         return user
@@ -106,16 +106,14 @@ class UserServices:
                                              email=email, password=password)
 
     def is_active(self, user: User) -> bool:
-        active = self.crud_engine.is_active(user=user)
-        if not active:
+        if not self.crud_engine.is_active(user=user):
             raise UserInactive
-        return self.crud_engine.is_active(user=user)
+        return user
 
     def is_superuser(self, user: User) -> bool:
-        super = self.crud_engine.is_active(user=user)
-        if not super:
+        if not self.crud_engine.is_superuser(user=user):
             raise UserNotSuper
-        return self.crud_engine.is_superuser(user=user)
+        return user
 
     def get_multi(
         self, skip: int = 0, limit: int = 100,
@@ -205,5 +203,5 @@ class UserServices:
         hashed_password = get_password_hash(new_password.body)
         user.hashed_password = hashed_password
 
-        self.update(id=user.id, body=user)
+        self.update(id=user.id, obj_in=user)
         return {"msg": "Password updated successfully"}
