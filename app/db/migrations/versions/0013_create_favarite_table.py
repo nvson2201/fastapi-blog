@@ -13,8 +13,10 @@ def upgrade():
     # create favorites table
     op.create_table(
         'favorites',
-        sa.Column('post_id', sa.Integer(), nullable=True, primary_key=True),
-        sa.Column('user_id', sa.Integer(), nullable=True, primary_key=True),
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('post_id', sa.Integer(), nullable=True),
+        sa.Column('user_id', sa.Integer(), nullable=True),
+        sa.PrimaryKeyConstraint('id'),
         sa.ForeignKeyConstraint(
             ['post_id'], ['posts.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(
@@ -24,6 +26,8 @@ def upgrade():
                     ['post_id'], unique=False)
     op.create_index(op.f('ix_user_id'), 'favorites',
                     ['user_id'], unique=False)
+    op.create_index(op.f('ix_favorites_id'),
+                    'favorites', ['id'], unique=False)
 
 
 def downgrade():

@@ -6,12 +6,12 @@ from app.models.user import User
 from app.schemas.user import UserUpdate, UserCreate
 from app.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
-from app.db.repositories_cache.base import CRUDRedisDecorator
+from app.db.repositories_cache.base import RedisDecorator
 from app.schemas.datetime import DateTime
 
 
-class CRUDRedisUserDecorator(
-    CRUDRedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
+class UserRedisRepository(
+    RedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
 ):
 
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
@@ -64,5 +64,5 @@ class CRUDRedisUserDecorator(
     def is_superuser(self, user: User) -> bool:
         return self.crud_component.is_superuser(user=user)
 
-    def remove(self, db: Session):
-        pass
+    def remove(self, db: Session, id: Any):
+        return self.crud_component.remove(db, id=id)

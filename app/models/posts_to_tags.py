@@ -14,12 +14,13 @@ class PostsToTags(Base):
 
     __tablename__ = "posts_to_tags"
 
+    id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey(
-        "posts.id", ondelete="CASCADE"), primary_key=True, index=True)
+        "posts.id", ondelete="CASCADE"), index=True)
     post = relationship("Post", back_populates="posts_to_tags")
 
     tag_id = Column(Integer, ForeignKey(
-        "tags.id", ondelete="CASCADE"), primary_key=True, index=True)
+        "tags.id", ondelete="CASCADE"), index=True)
     tag = relationship("Tag", back_populates="posts_to_tags")
 
     def __repr__(self):

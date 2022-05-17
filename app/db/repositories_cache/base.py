@@ -5,14 +5,14 @@ from app.plugins.redis import redis_services
 from app.models.user import User
 
 from app.decorators.decorator import (
-    CRUDDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
-from app.decorators.component import CRUDComponent
+    RepositoryDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
+from app.decorators.component import ComponentRepository
 
 
-class CRUDRedisDecorator(CRUDDecorator[ModelType, CreateSchemaType,
-                                       UpdateSchemaType]):
+class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
+                                         UpdateSchemaType]):
 
-    def __init__(self,  _crud_component: CRUDComponent, suffix: str):
+    def __init__(self,  _crud_component: ComponentRepository, suffix: str):
         self._crud_component = _crud_component
         self.suffix = suffix
 

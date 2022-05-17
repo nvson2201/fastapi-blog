@@ -16,12 +16,12 @@ class FollowersToFollowings(Base):
     body = Column(String(255))
 
     follower_id = Column(Integer, ForeignKey(
-        "users.id", ondelete="CASCADE"), primary_key=True, index=True)
-    follower = relationship("User", back_populates="following")
+        "users.id", ondelete="CASCADE"), index=True)
+    follower = relationship("User", foreign_keys=[follower_id])
 
     following_id = Column(Integer, ForeignKey(
-        "users.id", ondelete="CASCADE"), primary_key=True, index=True)
-    following = relationship("User", back_populates="follower")
+        "users.id", ondelete="CASCADE"), index=True)
+    following = relationship("User", foreign_keys=[following_id])
 
     def __repr__(self):
         return f"""

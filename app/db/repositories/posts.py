@@ -3,12 +3,12 @@ from typing import List
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from app.db.repositories.base import CRUDBase
+from app.db.repositories.base import BaseRepository
 from app.models.post import Post
 from app.schemas.post import PostCreate, PostUpdate
 
 
-class CRUDPost(CRUDBase[Post, PostCreate, PostUpdate]):
+class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     def create_with_owner(
         self, db: Session, *, obj_in: PostCreate, author_id: int
     ) -> Post:
@@ -31,4 +31,4 @@ class CRUDPost(CRUDBase[Post, PostCreate, PostUpdate]):
         )
 
 
-post = CRUDPost(Post)
+posts = PostRepository(Post)

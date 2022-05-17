@@ -3,13 +3,13 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
-from app.services.user import UserServices
+from app.services.users import UserServices
 from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
 )
 from app.api.dependencies.user_services import get_user_services
-from app.exceptions.user import (
+from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.schemas.datetime import DateTime

@@ -4,14 +4,14 @@ from typing import Any, Dict, Optional, Union
 from sqlalchemy.orm import Session
 
 from app.utils.security import get_password_hash, verify_password
-from app.db.repositories.base import CRUDBase
+from app.db.repositories.base import BaseRepository
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.schemas.datetime import DateTime
 from app.config import settings
 
 
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
+class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
@@ -81,4 +81,4 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return q.all()
 
 
-user = CRUDUser(User)
+users = UserRepository(User)

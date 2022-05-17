@@ -1,12 +1,11 @@
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
-
 from app import models
 from app.config import settings
-from app.exceptions.user import (
+from app.exceptions.users import (
     UserNotFound, UserInvalidCredentials, UserInactive, UserNotSuper)
-from app.services.user import UserServices
+from app.services.users import UserServices
 from app.api.dependencies.user_services import get_user_services
 
 reusable_oauth2 = OAuth2PasswordBearer(

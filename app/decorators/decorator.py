@@ -1,18 +1,18 @@
 from app.decorators.component import (
-    CRUDComponent, ModelType, CreateSchemaType, UpdateSchemaType)
+    ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
-class CRUDDecorator(
-        CRUDComponent[ModelType, CreateSchemaType, UpdateSchemaType]
+class RepositoryDecorator(
+        ComponentRepository[ModelType, CreateSchemaType, UpdateSchemaType]
 ):
 
-    _crud_component: CRUDComponent = None
+    _crud_component: ComponentRepository = None
 
-    def __init__(self, _crud_component: CRUDComponent) -> None:
+    def __init__(self, _crud_component: ComponentRepository) -> None:
         self._crud_component = _crud_component
 
     @property
-    def crud_component(self) -> CRUDComponent:
+    def crud_component(self) -> ComponentRepository:
         return self._crud_component
 
     def get(self):

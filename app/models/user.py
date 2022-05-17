@@ -29,12 +29,12 @@ class User(Base):
         "Comment", back_populates="author", cascade="all,delete")
     favorites = relationship(
         "Favorite", back_populates="user", cascade="all,delete")
-    follower = relationship(
-        "FollowersToFollowings",
-        back_populates="following", cascade="all,delete")
-    following = relationship(
-        "FollowersToFollowings",
-        back_populates="follower", cascade="all,delete")
+    # follower = relationship(
+    #     "FollowersToFollowings",
+    #     back_populates="following", cascade="all,delete")
+    # following = relationship(
+    #     "FollowersToFollowings",
+    #     back_populates="follower", cascade="all,delete")
 
 
 def __repr__(self):

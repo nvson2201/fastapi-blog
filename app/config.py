@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
-    FIRST_SUPERUSER_PASSWORD: str = "1234567"
+    FIRST_SUPERUSER: EmailStr = "nguyenvanson22@gapo.com.vn"
+    FIRST_SUPERUSER_PASSWORD: str = "1234567AA22a"
     USERS_OPEN_REGISTRATION: bool = False
 
     DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa
@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET = "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"
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
+
+    KAFKA_BROKER_URL = {'bootstrap.servers': 'localhost: 9092'}
 
     def past_week(self):
         return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
