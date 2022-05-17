@@ -1,12 +1,15 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.plugins.mysql.base_class import Base
 
 if TYPE_CHECKING:
     from .user import User  # noqa: F401
+    from .comment import Comment  # noqa: F401
+    from .posts_to_tags import PostsToTags  # noqa: F401
+    from .favorite import Favorite  # noqa: F401
 
 
 class Post(Base):
@@ -14,11 +17,19 @@ class Post(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(50))
     body = Column(String(255))
-    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    owner = relationship("User", back_populates="posts")
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    author = relationship("User", back_populates="posts")
 
     comments = relationship(
-        "Comment", back_populates="contain", cascade="all,delete")
+        "Comment", back_populates="post", cascade="all,delete")
+
+    posts_to_tags = relationship(
+        "PostsToTags", back_populates="post", cascade="all,delete")
+
+    favorites = relationship(
+        "Favorite", back_populates="post", cascade="all,delete")
 
     def __repr__(self):
         return f"{self.title}"

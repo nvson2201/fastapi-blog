@@ -1,19 +1,18 @@
 from typing import Any, List
-import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
-from app.services.crud_cache import UserServices
-from app.api.deps import (
+from app.services.users import UserServices
+from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
-    get_user_services,
 )
-from app.exceptions.user import (
+from app.api.dependencies.user_services import get_user_services
+from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
-from app.config import settings
+from app.schemas.datetime import DateTime
 
 router = APIRouter()
 
@@ -22,15 +21,15 @@ router = APIRouter()
 def read_users(
     skip: int = 0,
     limit: int = 100,
-    date_start: datetime.datetime = settings.START_TIME_DEFAULT,
-    date_end: datetime.datetime = settings.local_current_time(),
+    date_start: DateTime = None,
+    date_end: DateTime = None,
     current_user: models.User = Depends(get_current_active_superuser),
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Retrieve users by admin.
     """
-    users = user_services.read_users(
+    users = user_services.get_multi(
         skip=skip, limit=limit,
         date_start=date_start, date_end=date_end
     )
@@ -48,7 +47,7 @@ def create_user(
     Create new user by admin.
     """
     try:
-        user = user_services.create_user(body=body)
+        user = user_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -69,7 +68,7 @@ def update_user_me(
     Update own user.
     """
     try:
-        user = user_services.update_by_id(id=current_user.id, body=body)
+        user = user_services.update(id=current_user.id, body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -124,7 +123,7 @@ def read_user_by_id(
     Get a specific user by id.
     """
     try:
-        user = user_services.get_by_id(id=user_id)
+        user = user_services.get(id=user_id)
     except UserNotFound:
         raise HTTPException(
             status_code=404,
@@ -146,7 +145,7 @@ def update_user(
     Update a specific user by id.
     """
     try:
-        user = user_services.update_by_id(id=user_id, body=body)
+        user = user_services.update(id=user_id, body=body)
     except UserNotFound:
         raise HTTPException(
             status_code=404,

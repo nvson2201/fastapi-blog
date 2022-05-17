@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
-    FIRST_SUPERUSER_PASSWORD: str = "1234567"
+    FIRST_SUPERUSER: EmailStr = "nguyenvanson22@gapo.com.vn"
+    FIRST_SUPERUSER_PASSWORD: str = "1234567AA22a"
     USERS_OPEN_REGISTRATION: bool = False
 
     DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa
@@ -27,9 +27,12 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
-    UTC_CURRENT_TIME = datetime.datetime.utcnow()
+    KAFKA_BROKER_URL = {'bootstrap.servers': 'localhost: 9092'}
 
-    def local_current_time(self):
+    def past_week(self):
+        return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
+
+    def current_time(self):
         return (datetime.datetime.utcnow() +
                 datetime.timedelta(hours=7))
     # year 1 month 1 day 1
