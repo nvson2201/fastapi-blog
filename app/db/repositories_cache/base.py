@@ -11,38 +11,37 @@ from app.decorators.component import ComponentRepository
 class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
                                          UpdateSchemaType]):
 
-    def __init__(self,  _crud_component: ComponentRepository, suffix: str):
+    def __init__(self,  _crud_component: ComponentRepository, prefix: str):
         self._crud_component = _crud_component
-        self.suffix = suffix
+        self.prefix = prefix
 
     def _get_cache(self, id: str):
         return redis_services.get_cache(
             id=str(id),
-            suffix=self.suffix
+            prefix=self.prefix
         )
 
     def _set_cache(self, id: str, data):
         redis_services.set_cache(
             id=str(id),
-            suffix=self.suffix,
+            prefix=self.prefix,
             data=data.__dict__
         )
 
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        cache_data = self._get_cache(id=id)
+        cache_data = self._get_cache(id)
 
         if cache_data:
             obj = ModelType(**cache_data)
         else:
-            obj = self.crud_component.get(db=db, id=id)
+            obj = self.crud_component.get(db, id)
 
-        self._set_cache(id=id, data=obj)
+        self._set_cache(id, data=obj)
 
         return obj
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        obj = self.crud_component.create(db, obj_in=obj_in)
-
+    def create(self, db: Session, *, body: CreateSchemaType) -> ModelType:
+        obj = self.crud_component.create(db, body=body)
         self._set_cache(id=obj.id, data=obj)
 
         return obj
@@ -50,11 +49,11 @@ class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
     def update(
         self,
         db: Session,
+        obj: ModelType,
         *,
-        db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj = self.crud_component.update(db, db_obj=db_obj, obj_in=obj_in)
+        obj = self.crud_component.update(db, obj=obj, body=body)
         self._set_cache(id=obj.id, data=obj)
         return obj
 

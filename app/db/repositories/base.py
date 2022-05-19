@@ -27,33 +27,35 @@ class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
     ) -> List[ModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data)
-        db.add(db_obj)
+    def create(self, db: Session, *, body: CreateSchemaType) -> ModelType:
+        body_dict = jsonable_encoder(body)
+        obj = self.model(**body_dict)
+        db.add(obj)
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        db.refresh(obj)
+        return obj
 
     def update(
         self,
         db: Session,
+        obj: ModelType,
         *,
-        db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
-        if isinstance(obj_in, dict):
-            update_data = obj_in
+        obj_dict = jsonable_encoder(obj)
+
+        if isinstance(body, dict):
+            update_data = body
         else:
-            update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
+            update_data = body.dict(exclude_unset=True)
+
+        for field in obj_dict:
             if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.merge(db_obj)
+                setattr(obj, field, update_data[field])
+        db.merge(obj)
         db.commit()
 
-        return db_obj
+        return obj
 
     def remove(self, db: Session, *, id: int) -> ModelType:
         obj = db.query(self.model).get(id)

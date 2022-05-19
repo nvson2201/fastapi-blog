@@ -2,8 +2,8 @@ from typing import Any, Dict, Optional, Union, List
 
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.schemas.user import UserUpdate, UserCreate
+from app.models.users import User
+from app.schemas.users import UserUpdate, UserCreate
 from app.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.db.repositories_cache.base import RedisDecorator
@@ -21,28 +21,28 @@ class UserRedisRepository(
         return user
 
     def get(self, db: Session, id: Any) -> Optional[User]:
-        cache_data = self._get_cache(id=id)
+        cache_data = self._get_cache(id)
 
         if cache_data:
             user = User(**cache_data)
         else:
-            user = self.crud_component.get(db, id=id)
+            user = self.crud_component.get(db, id)
             if user:
-                self._set_cache(id=id, data=user)
+                self._set_cache(id, data=user)
 
         return user
 
-    def create(self, db: Session, obj_in: UserCreate):
-        user = self.crud_component.create(db, obj_in=obj_in)
+    def create(self, db: Session, body: UserCreate):
+        user = self.crud_component.create(db, body=body)
         self._set_cache(id=user.id, data=user)
 
         return user
 
     def update(
-        self, db: Session, *,
-        db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
+        self, db: Session,
+        user: User,  *, body: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        user = self.crud_component.update(db, db_obj=db_obj, obj_in=obj_in)
+        user = self.crud_component.update(db, user=user, body=body)
         self._set_cache(id=user.id, data=user)
 
         return user
@@ -70,4 +70,4 @@ class UserRedisRepository(
         return self.crud_component.is_superuser(user=user)
 
     def remove(self, db: Session, id: Any):
-        return self.crud_component.remove(db, id=id)
+        return self.crud_component.remove(db, id)

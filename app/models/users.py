@@ -5,9 +5,9 @@ from sqlalchemy.orm import relationship
 from app.plugins.mysql.base_class import Base
 
 if TYPE_CHECKING:
-    from .post import Post  # noqa: F401
-    from .comment import Comment  # noqa: F401
-    from .favorite import Favorite  # noqa: F401
+    from .posts import Post  # noqa: F401
+    from .comments import Comment  # noqa: F401
+    from .favorites import Favorite  # noqa: F401
     from .followers_to_followings import FollowersToFollowings  # noqa: F401
 
 

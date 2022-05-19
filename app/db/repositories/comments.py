@@ -4,22 +4,22 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.db.repositories.base import BaseRepository
-from app.models.comment import Comment
-from app.schemas.comment import CommentCreate, CommentUpdate
+from app.models.comments import Comment
+from app.schemas.comments import CommentCreate, CommentUpdate
 
 
 class CommentRepository(BaseRepository[Comment, CommentCreate, CommentUpdate]):
     def create_with_owner(
-        self, db: Session, *, obj_in: CommentCreate,
+        self, db: Session, *, body: CommentCreate,
         author_id: int, post_id: int
     ) -> Comment:
-        obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, author_id=author_id,
-                            post_id=post_id)
-        db.add(db_obj)
+        body_dict = jsonable_encoder(body)
+        comment = self.model(**body_dict, author_id=author_id,
+                             post_id=post_id)
+        db.add(comment)
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        db.refresh(comment)
+        return comment
 
     def get_multi_by_owner(
         self, db: Session, *, author_id: int, post_id=int,

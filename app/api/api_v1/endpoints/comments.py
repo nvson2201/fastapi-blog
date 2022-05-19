@@ -27,7 +27,7 @@ def read_comments(
         comments = repositories.comment.get_multi(db, skip=skip, limit=limit)
     else:
         comments = repositories.comment.get_multi_by_owner(
-            db=db, author_id=current_user.id, skip=skip,
+            db, author_id=current_user.id, skip=skip,
             limit=limit, post_id=post_id
         )
     return comments
@@ -48,7 +48,7 @@ def create_comment(
     Create new comment.
     """
     comment = repositories.comment.create_with_owner(
-        db=db, obj_in=body, author_id=current_user.id, post_id=post_id)
+        db, body=body, author_id=current_user.id, post_id=post_id)
     return comment
 
 
@@ -64,13 +64,13 @@ def update_comment(
     """
     Update an comment.
     """
-    comment = repositories.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db, id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.users.is_superuser(current_user) and
             (comment.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    comment = repositories.comment.update(db=db, db_obj=comment, obj_in=body)
+    comment = repositories.comment.update(db, comment, body=body)
     return comment
 
 
@@ -85,7 +85,7 @@ def read_comment(
     """
     Get comment by ID.
     """
-    comment = repositories.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db, id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.users.is_superuser(current_user)
@@ -105,11 +105,11 @@ def delete_comment(
     """
     Delete an comment.
     """
-    comment = repositories.comment.get(db=db, id=id)
+    comment = repositories.comment.get(db, id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     if (not repositories.users.is_superuser(current_user) and
             comment.author_id != current_user.id):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    comment = repositories.comment.remove(db=db, id=id)
+    comment = repositories.comment.remove(db, id)
     return comment

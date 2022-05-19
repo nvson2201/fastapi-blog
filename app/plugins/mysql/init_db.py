@@ -15,4 +15,4 @@ def init_db(db: Session) -> None:
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = repositories.users.create(db, obj_in=first_superuser)
+        user = repositories.users.create(db, body=first_superuser)

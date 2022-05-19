@@ -3,14 +3,12 @@ from typing import List, Union
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
-from app.models.post import Post
-from app.schemas.post import PostUpdate, PostCreate
+from app.models.posts import Post
+from app.schemas.posts import PostUpdate, PostCreate
 from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.db.repositories.posts import PostRepository
 from app.plugins.kafka import producer
-from fastapi.encoders import jsonable_encoder
-from app.schemas.post import PostUpdateView
 
 
 class PostServices:
@@ -21,34 +19,31 @@ class PostServices:
         self.crud_engine = crud_engine
 
     def get(self, id: str):
-        post = self.crud_engine.get(self.db, id=id)
+        post = self.crud_engine.get(self.db, id)
         if not post:
             raise PostNotFound
 
-        producer.produce(jsonable_encoder(
-            PostUpdateView(id=post.id, views=post.views))
-        )
+        producer.produce({'id': post.id})
 
         return post
 
-    def update(self, id: str, obj_in: PostUpdate):
-        post = self.crud_engine.get(self.db, id=id)
+    def update(self, id: str, body: PostUpdate):
+        post = self.crud_engine.get(self.db, id)
 
         if not post:
             raise PostNotFound
 
         try:
-            post = self.crud_engine.update(
-                self.db, db_obj=post, obj_in=obj_in)
+            post = self.crud_engine.update(self.db, post, body=body)
         except exc.IntegrityError:
             raise PostDuplicate
 
         return post
 
-    def create_with_owner(self, obj_in: PostCreate, author_id: int):
+    def create_with_owner(self, body: PostCreate, author_id: int):
 
         post = self.crud_engine.create_with_owner(
-            self.db, obj_in=obj_in, author_id=author_id)
+            self.db, body=body, author_id=author_id)
 
         return post
 
@@ -64,4 +59,7 @@ class PostServices:
         return posts
 
     def remove(self, id: int):
-        return self.crud_engine.remove(self.db, id=id)
+        return self.crud_engine.remove(self.db, id)
+
+    def update_views(self, id: int):
+        self.crud_engine.update_views(self.db, id)

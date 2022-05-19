@@ -2,19 +2,7 @@ from urllib import error
 
 import click
 
-from app.api.dependencies.database import get_db
-from app.services.users import UserServices
-from app.db.repositories_cache.users import UserRedisRepository
-from app.config import settings
-from app.db import repositories
-
-db = next(get_db())
-
-crud_engine = UserRedisRepository(
-    repositories.user, settings.REDIS_SUFFIX_USER
-)
-
-user_services = UserServices(db, crud_engine=crud_engine)
+from app.api.dependencies import user_services
 
 
 @click.command()
@@ -23,7 +11,7 @@ def read_user_by_id(user_id):
     """
     Get a specific user by id.
     """
-    user = user_services.get_by_id(id=user_id)
+    user = user_services.get(id=user_id)
     if not user:
         raise error.HTTPError(
             code=404, msg="User not found", url=None,

@@ -39,7 +39,7 @@ def create_post(
     Create new post.
     """
     post = post_services.create_with_owner(
-        obj_in=body, author_id=current_user.id)
+        body=body, author_id=current_user.id)
     return post
 
 
@@ -55,13 +55,13 @@ def update_post(
     """
     Update an post.
     """
-    post = post_services.get(id=id)
+    post = post_services.get(id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if (not repositories.users.is_superuser(current_user)
             and (post.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = post_services.update(db_obj=post, obj_in=body)
+    post = post_services.update(post, body=body)
     return post
 
 
@@ -77,7 +77,7 @@ def read_post(
     Get post by ID.
     """
     try:
-        post = post_services.get(id=id)
+        post = post_services.get(id)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
@@ -95,7 +95,7 @@ def delete_post(
     Delete an post.
     """
     try:
-        post = post_services.remove(id=id)
+        post = post_services.remove(id)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post

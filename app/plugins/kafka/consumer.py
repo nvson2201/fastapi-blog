@@ -10,7 +10,7 @@ class KafkaConsumer():
         self.consumer.subscribe([topic])
 
     def consume(self, back_ground_job):
-        msgs = []
+
         while True:
             msg = self.consumer.poll(timeout=1.0)
             if msg is None:
@@ -18,12 +18,8 @@ class KafkaConsumer():
             if msg.error():
                 raise KafkaException(msg.error())
             else:
-
                 msg = json.loads(msg.value())
-                msgs.append(msg)
-                if len(msgs) == 5:
-                    back_ground_job(msgs)
-                    msgs = []
+                back_ground_job(msg)
 
         self.consumer.close()
 

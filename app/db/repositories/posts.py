@@ -10,15 +10,15 @@ from app.schemas.post import PostCreate, PostUpdate
 
 class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     def create_with_owner(
-        self, db: Session, *, obj_in: PostCreate, author_id: int
+        self, db: Session, *, body: PostCreate, author_id: int
     ) -> Post:
-        obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, author_id=author_id)
-        db_obj.views = 0
-        db.add(db_obj)
+        body_dict = jsonable_encoder(body)
+        post = self.model(**body_dict, author_id=author_id)
+        post.views = 0
+        db.add(post)
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        db.refresh(post)
+        return post
 
     def get_multi_by_owner(
         self, db: Session, *, author_id: int, skip: int = 0, limit: int = 100

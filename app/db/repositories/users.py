@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.utils.security import get_password_hash, verify_password
 from app.db.repositories.base import BaseRepository
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.models.users import User
+from app.schemas.users import UserCreate, UserUpdate
 from app.schemas.datetime import DateTime
 from app.config import settings
 
@@ -15,34 +15,34 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
-    def create(self, db: Session, *, obj_in: UserCreate) -> User:
-        db_obj = User()
+    def create(self, db: Session, *, body: UserCreate) -> User:
+        user = User()
         exclude_keys_in_user_model = ['password', 'created_at']
 
-        for key, value in obj_in.__dict__.items():
+        for key, value in body.__dict__.items():
             if key not in exclude_keys_in_user_model:
-                setattr(db_obj, key, value)
+                setattr(user, key, value)
 
-        db_obj.hashed_password = get_password_hash(obj_in.password)
-        db_obj.created_at = settings.current_time()
+        user.hashed_password = get_password_hash(body.password)
+        user.created_at = settings.current_time()
 
-        return super().create(db, obj_in=db_obj)
+        return super().create(db, body=user)
 
     def update(
-        self, db: Session, *,
-        db_obj: User, obj_in: Union[UserUpdate, Dict[str, Any]]
+        self, db: Session,
+        user: User, *, body: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
+        if isinstance(body, dict):
+            update_data = body
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = body.dict(exclude_unset=True)
 
         if "password" in update_data:
             hashed_password = get_password_hash(update_data["password"])
             del update_data["password"]
             update_data["hashed_password"] = hashed_password
 
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+        return super().update(db, user=user, body=update_data)
 
     def authenticate(self, db: Session, *,
                      email: str, password: str) -> Optional[User]:

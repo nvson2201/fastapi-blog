@@ -7,8 +7,8 @@ from jose import jwt
 from pydantic import ValidationError
 
 from app.config import settings
-from app.models.user import User
-from app.schemas.user import UserUpdate, UserCreate
+from app.models.users import User
+from app.schemas.users import UserUpdate, UserCreate
 from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser,
     UserInvalidCredentials, UserInactive, UserNotSuper,
@@ -19,7 +19,7 @@ from app.db.repositories_cache.users import UserRedisRepository
 from app.db.repositories.users import UserRepository
 from app.schemas.datetime import DateTime
 from app.utils import security
-from app.schemas.token import TokenPayload
+from app.schemas.tokens import TokenPayload
 from app.utils.mail import (
     generate_password_reset_token,
     send_reset_password_email,
@@ -40,63 +40,63 @@ class UserServices:
         return self.crud_engine.get_by_email(email=email)
 
     def get(self, id: str) -> User:
-        user = self.crud_engine.get(self.db, id=id)
+        user = self.crud_engine.get(self.db, id)
 
         if not user:
             raise UserNotFound
 
         return user
 
-    def update(self, id: str, obj_in: UserUpdate) -> User:
-        user = self.crud_engine.get(self.db, id=id)
+    def update(self, id: str, body: UserUpdate) -> User:
+        user = self.crud_engine.get(self.db, id)
 
         if not user:
             raise UserNotFound
 
         try:
             user = self.crud_engine.update(
-                self.db, db_obj=user, obj_in=obj_in)
+                self.db, user, body=body)
         except exc.IntegrityError:
             raise UserDuplicate
 
         return user
 
-    def create(self, obj_in: UserCreate) -> User:
+    def create(self, body: UserCreate) -> User:
         user = self.crud_engine.get_by_email(
-            self.db, email=obj_in.email)
+            self.db, email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(self.db, obj_in=obj_in)
+        user = self.crud_engine.create(self.db, body=body)
 
-        if settings.EMAILS_ENABLED and obj_in.email:
+        if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
-                email_to=obj_in.email,
-                username=obj_in.email,
-                password=obj_in.password
+                email_to=body.email,
+                username=body.email,
+                password=body.password
             )
 
         return user
 
-    def create_user_open(self, obj_in: UserCreate) -> User:
+    def create_user_open(self, body: UserCreate) -> User:
 
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
         user = self.crud_engine.get_by_email(
-            self.db, email=obj_in.email)
+            self.db, email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(self.db, obj_in=obj_in)
+        user = self.crud_engine.create(self.db, body=body)
 
-        if settings.EMAILS_ENABLED and obj_in.email:
+        if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
-                email_to=obj_in.email,
-                username=obj_in.email,
-                password=obj_in.password
+                email_to=body.email,
+                username=body.email,
+                password=body.password
             )
 
         return user
@@ -195,7 +195,7 @@ class UserServices:
         id = verify_password_reset_token(token)
         if not id:
             raise InvalidToken
-        user = self.get(id=id)
+        user = self.get(id)
         if not user:
             raise UserNotFound
         elif not self.is_active(user):
@@ -203,5 +203,5 @@ class UserServices:
         hashed_password = get_password_hash(new_password.body)
         user.hashed_password = hashed_password
 
-        self.update(id=user.id, obj_in=user)
+        self.update(id=user.id, body=user)
         return {"msg": "Password updated successfully"}
