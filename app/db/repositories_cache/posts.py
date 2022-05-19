@@ -52,3 +52,8 @@ class PostRedisRepository(
 
     def remove(self, db: Session, id: Any):
         return self.crud_component.remove(db, id)
+
+    def update_views(self, db: Session, id: Any):
+        post = self.crud_component.update_views(db, id)
+        self._set_cache(id=post.id, data=post)
+        return post

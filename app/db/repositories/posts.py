@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Any
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.db.repositories.base import BaseRepository
-from app.models.post import Post
-from app.schemas.post import PostCreate, PostUpdate
+from app.models.posts import Post
+from app.schemas.posts import PostCreate, PostUpdate
 
 
 class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
@@ -30,6 +30,14 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             .limit(limit)
             .all()
         )
+
+    def update_views(self, db: Session, id: Any):
+        post = db.query(self.model).filter(self.model.id == id).first()
+        post.views = self.model.views + 1
+        db.commit()
+        db.refresh(post)
+
+        return post
 
 
 posts = PostRepository(Post)
