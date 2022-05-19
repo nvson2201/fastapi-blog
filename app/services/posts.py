@@ -8,6 +8,9 @@ from app.schemas.post import PostUpdate, PostCreate
 from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.db.repositories.posts import PostRepository
+from app.plugins.kafka import producer
+from fastapi.encoders import jsonable_encoder
+from app.schemas.post import PostUpdateView
 
 
 class PostServices:
@@ -17,14 +20,18 @@ class PostServices:
         self.db = db
         self.crud_engine = crud_engine
 
-    def get_by_id(self, id: str):
+    def get(self, id: str):
         post = self.crud_engine.get(self.db, id=id)
         if not post:
             raise PostNotFound
 
+        producer.produce(jsonable_encoder(
+            PostUpdateView(id=post.id, views=post.views))
+        )
+
         return post
 
-    def update_by_id(self, id: str, body: PostUpdate):
+    def update(self, id: str, obj_in: PostUpdate):
         post = self.crud_engine.get(self.db, id=id)
 
         if not post:
@@ -32,16 +39,16 @@ class PostServices:
 
         try:
             post = self.crud_engine.update(
-                self.db, db_obj=post, obj_in=body)
+                self.db, db_obj=post, obj_in=obj_in)
         except exc.IntegrityError:
             raise PostDuplicate
 
         return post
 
-    def create_with_owner(self, body: PostCreate, author_id: int):
+    def create_with_owner(self, obj_in: PostCreate, author_id: int):
 
         post = self.crud_engine.create_with_owner(
-            self.db, obj_in=body, author_id=author_id)
+            self.db, obj_in=obj_in, author_id=author_id)
 
         return post
 
@@ -56,5 +63,5 @@ class PostServices:
 
         return posts
 
-    def remove(self, db: Session, id: int):
-        return self.crud_engine.remove(db, id=id)
+    def remove(self, id: int):
+        return self.crud_engine.remove(self.db, id=id)
