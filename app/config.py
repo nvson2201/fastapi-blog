@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
-    FIRST_SUPERUSER: EmailStr = "nguyenvanson22@gapo.com.vn"
-    FIRST_SUPERUSER_PASSWORD: str = "1234567AA22a"
+    FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
+    FIRST_SUPERUSER_PASSWORD: str = "string11A"
     USERS_OPEN_REGISTRATION: bool = False
 
     DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa
@@ -27,7 +27,23 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
-    KAFKA_BROKER_URL = {'bootstrap.servers': 'localhost: 9092'}
+    KAFKA_PRODUCER_BOOTSTRAP_URL = 'localhost:29092'
+    KAFKA_CONSUMER_BOOTSTRAP_URL = 'localhost:29092'
+    KAFKA_ADMIN_BOOTSTRAP_URL = 'localhost:29092'
+    KAFKA_TOPIC_POST_VIEWS = 'views'
+    KAFKA_CONSUMER_GROUP = 'mygroup'
+    KAFKA_SESSION_TIMEOUT_MS = 6000
+
+    KAFKA_CONSUMER_CONFIG = {
+        'bootstrap.servers': KAFKA_CONSUMER_BOOTSTRAP_URL,
+        'group.id': KAFKA_CONSUMER_GROUP,
+        'session.timeout.ms': KAFKA_SESSION_TIMEOUT_MS,
+        'auto.offset.reset': 'earliest'
+    }
+
+    KAFKA_PRODUCER_CONFIG = {
+        'bootstrap.servers': KAFKA_PRODUCER_BOOTSTRAP_URL
+    }
 
     def past_week(self):
         return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
