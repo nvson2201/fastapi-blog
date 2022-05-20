@@ -6,8 +6,8 @@ from sqlalchemy.orm import relationship
 from app.plugins.mysql.base_class import Base
 
 if TYPE_CHECKING:
-    from .tag import Tag  # noqa: F401
-    from .post import Post  # noqa: F401
+    from .tags import Tag  # noqa: F401
+    from .posts import Post  # noqa: F401
 
 
 class PostsToTags(Base):

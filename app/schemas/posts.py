@@ -17,11 +17,17 @@ class PostUpdate(PostBase):
     pass
 
 
+class PostUpdateView(BaseModel):
+    id: int
+    views: Optional[int] = None
+
+
 class PostInDBBase(PostBase):
     id: int
     title: str
     body: str
     author_id: int
+    views: int
 
     class Config:
         orm_mode = True

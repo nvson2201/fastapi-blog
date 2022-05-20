@@ -17,6 +17,14 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     email: EmailStr
     password: str
+    full_name: Optional[str] = None
+
+    @validator('full_name')
+    def full_name_validator(cls, v):
+        if not v.replace(" ", "").isalpha():
+            raise ValueError(
+                'The full name must contain alpha characters only.'
+            )
 
     @validator('password')
     def password_validate(cls, v):
@@ -40,6 +48,14 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     password: Optional[str] = None
     email: Optional[EmailStr] = None
+    full_name: Optional[str] = None
+
+    @validator('full_name')
+    def full_name_validator(cls, v):
+        if not v.replace(" ", "").isalpha():
+            raise ValueError(
+                'The full name must contain alpha characters only.'
+            )
 
     @validator('password')
     def password_validate(cls, v):

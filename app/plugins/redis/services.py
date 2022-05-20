@@ -5,19 +5,20 @@ from app.config import settings
 
 
 class RedisServices:
-    def get_cache(self, id: str, suffix: str):
-        if redis_session.exists(id + suffix):
-            cache_data = pickle.loads(redis_session.get(id + suffix))
-            del cache_data["_sa_instance_state"]
+    def get_cache(self, id: int, prefix: str):
+        if redis_session.exists(prefix + str(id)):
+            cache_data = pickle.loads(redis_session.get(prefix + str(id)))
+            if "_sa_instance_state" in cache_data:
+                del cache_data["_sa_instance_state"]
         else:
             cache_data = None
 
         return cache_data
 
-    def set_cache(self, id: str, suffix: str, data):
+    def set_cache(self, id: int, prefix: str, data):
         try:
             redis_session.setex(
-                id + suffix, settings.EXPEIRATION_TIME_CACHE,
+                prefix + str(id), settings.EXPEIRATION_TIME_CACHE,
                 pickle.dumps(data))
             return data
         except Exception as e:

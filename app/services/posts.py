@@ -1,38 +1,40 @@
+from app.db import repositories
 from typing import List, Union
 
 from sqlalchemy import exc
-from sqlalchemy.orm import Session
 
-from app.models.post import Post
-from app.schemas.post import PostUpdate, PostCreate
+from app.models.posts import Post
+from app.schemas.posts import PostUpdate, PostCreate
 from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.db.repositories.posts import PostRepository
+from app.plugins.kafka import producer
+from app.db import repositories_cache
 
 
 class PostServices:
 
-    def __init__(self, db: Session,
+    def __init__(self,
                  crud_engine: Union[PostRedisRepository, PostRepository]):
-        self.db = db
         self.crud_engine = crud_engine
 
-    def get_by_id(self, id: str):
-        post = self.crud_engine.get(self.db, id=id)
+    def get(self, id: str):
+        post = self.crud_engine.get(id)
         if not post:
             raise PostNotFound
 
+        producer.produce({'id': post.id})
+
         return post
 
-    def update_by_id(self, id: str, body: PostUpdate):
-        post = self.crud_engine.get(self.db, id=id)
+    def update(self, id: str, body: PostUpdate):
+        post = self.crud_engine.get(id)
 
         if not post:
             raise PostNotFound
 
         try:
-            post = self.crud_engine.update(
-                self.db, db_obj=post, obj_in=body)
+            post = self.crud_engine.update(self.post, body=body)
         except exc.IntegrityError:
             raise PostDuplicate
 
@@ -41,7 +43,7 @@ class PostServices:
     def create_with_owner(self, body: PostCreate, author_id: int):
 
         post = self.crud_engine.create_with_owner(
-            self.db, obj_in=body, author_id=author_id)
+            body=body, author_id=author_id)
 
         return post
 
@@ -50,11 +52,18 @@ class PostServices:
     ) -> List[Post]:
 
         posts = self.crud_engine.get_multi_by_owner(
-            self.db, author_id=author_id,
+            author_id=author_id,
             skip=skip, limit=limit,
         )
 
         return posts
 
-    def remove(self, db: Session, id: int):
-        return self.crud_engine.remove(db, id=id)
+    def remove(self, id: int):
+        return self.crud_engine.remove(id)
+
+    def update_views(self, id: int):
+        self.crud_engine.update_views(id)
+
+
+post_services = PostServices(crud_engine=repositories.users)
+post_redis_services = PostServices(crud_engine=repositories_cache.posts)

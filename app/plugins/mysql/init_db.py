@@ -8,11 +8,11 @@ from app.config import settings
 
 def init_db(db: Session) -> None:
 
-    user = repositories.users.get_by_email(db, email=settings.FIRST_SUPERUSER)
+    user = repositories.users.get_by_email(email=settings.FIRST_SUPERUSER)
     if not user:
         first_superuser = schemas.UserCreate(
             email=settings.FIRST_SUPERUSER,
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = repositories.users.create(db, obj_in=first_superuser)
+        user = repositories.users.create(body=first_superuser)

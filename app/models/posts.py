@@ -6,15 +6,16 @@ from sqlalchemy.orm import relationship
 from app.plugins.mysql.base_class import Base
 
 if TYPE_CHECKING:
-    from .user import User  # noqa: F401
-    from .comment import Comment  # noqa: F401
+    from .users import User  # noqa: F401
+    from .comments import Comment  # noqa: F401
     from .posts_to_tags import PostsToTags  # noqa: F401
-    from .favorite import Favorite  # noqa: F401
+    from .favorites import Favorite  # noqa: F401
 
 
 class Post(Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key=True, index=True)
+    views = Column(Integer)
     title = Column(String(50))
     body = Column(String(255))
     created_at = Column(DateTime)

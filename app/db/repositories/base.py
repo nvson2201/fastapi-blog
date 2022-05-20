@@ -9,54 +9,61 @@ from app.decorators.component import (
 
 class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
                                          UpdateSchemaType]):
-    def __init__(self, model: Type[ModelType]):
-        """
-        CRUD object with default methods to
-        Create, Read, Update, Delete (CRUD).
-        **Parameters**
-        * `model`: A SQLAlchemy model class
-        * `schema`: A Pydantic model (schema) class
-        """
-        self.model = model
 
-    def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        return db.query(self.model).filter(self.model.id == id).first()
+    def __init__(self, model: Type[ModelType], db: Session):
+        self.model = model
+        self.db = db
+
+    def get(self, id: Any) -> Optional[ModelType]:
+        q = self.db.query(self.model)
+        q = q.filter(self.model.id == id)
+        obj = q.first()
+
+        return obj
 
     def get_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 100
+        self, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+        q = self.db.query(self.model)
+        q = q.offset(skip)
+        q = q.limit(limit)
+        objs = q.all()
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data)
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        return objs
+
+    def create(self, *, body: CreateSchemaType) -> ModelType:
+        body_dict = jsonable_encoder(body)
+        obj = self.model(**body_dict)
+        self.db.add(obj)
+        self.db.commit()
+        self.db.refresh(obj)
+
+        return obj
 
     def update(
         self,
-        db: Session,
+        obj: ModelType,
         *,
-        db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+        body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_data = jsonable_encoder(db_obj)
-        if isinstance(obj_in, dict):
-            update_data = obj_in
+        obj_dict = jsonable_encoder(obj)
+
+        if isinstance(body, dict):
+            update_data = body
         else:
-            update_data = obj_in.dict(exclude_unset=True)
-        for field in obj_data:
+            update_data = body.dict(exclude_unset=True)
+
+        for field in obj_dict:
             if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.merge(db_obj)
-        db.commit()
+                setattr(obj, field, update_data[field])
 
-        return db_obj
+        self.db.merge(obj)
+        self.db.commit()
 
-    def remove(self, db: Session, *, id: int) -> ModelType:
-        obj = db.query(self.model).get(id)
-        db.delete(obj)
-        db.commit()
+        return obj
+
+    def remove(self, *, id: int) -> ModelType:
+        obj = self.db.query(self.model).get(id)
+        self.db.delete(obj)
+        self.db.commit()
         return obj
