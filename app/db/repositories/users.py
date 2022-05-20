@@ -45,7 +45,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             del update_data["password"]
             update_data["hashed_password"] = hashed_password
 
-        return super().update(user=user, body=update_data)
+        return super().update(user, body=update_data)
 
     def authenticate(self, *,
                      email: str, password: str) -> Optional[User]:

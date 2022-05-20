@@ -43,7 +43,7 @@ class UserServices:
 
         try:
             user = self.crud_engine.update(
-                self.user, body=body)
+                user, body=body)
         except exc.IntegrityError:
             raise UserDuplicate
 

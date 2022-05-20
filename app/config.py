@@ -46,6 +46,8 @@ class Settings(BaseSettings):
         'bootstrap.servers': KAFKA_PRODUCER_BOOTSTRAP_URL
     }
 
+    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+
     def past_week(self):
         return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
 
