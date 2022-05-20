@@ -3,16 +3,15 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
-from app.services.users import UserServices
 from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
 )
-from app.api.dependencies.user_services import get_user_services
 from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.schemas.datetime import DateTime
+from app.services.users import user_redis_services
 
 router = APIRouter()
 
@@ -23,13 +22,12 @@ def read_users(
     limit: int = 100,
     date_start: DateTime = None,
     date_end: DateTime = None,
-    current_user: models.User = Depends(get_current_active_superuser),
-    user_services: UserServices = Depends(get_user_services)
+    current_user: models.User = Depends(get_current_active_superuser)
 ) -> Any:
     """
     Retrieve users by admin.
     """
-    users = user_services.get_multi(
+    users = user_redis_services.get_multi(
         skip=skip, limit=limit,
         date_start=date_start, date_end=date_end
     )
@@ -40,14 +38,13 @@ def read_users(
 def create_user(
     *,
     body: schemas.UserCreate,
-    current_user: models.User = Depends(get_current_active_superuser),
-    user_services: UserServices = Depends(get_user_services)
+    current_user: models.User = Depends(get_current_active_superuser)
 ) -> Any:
     """
     Create new user by admin.
     """
     try:
-        user = user_services.create(body=body)
+        user = user_redis_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -61,14 +58,13 @@ def create_user(
 def update_user_me(
     *,
     body: schemas.UserUpdate,
-    current_user: models.User = Depends(get_current_active_user),
-    user_services: UserServices = Depends(get_user_services)
+    current_user: models.User = Depends(get_current_active_user)
 ) -> Any:
     """
     Update own user.
     """
     try:
-        user = user_services.update(id=current_user.id, body=body)
+        user = user_redis_services.update(id=current_user.id, body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -91,14 +87,13 @@ def read_user_me(
 @router.post("/open", response_model=schemas.User)
 def create_user_open(
     *,
-    body: schemas.UserCreate,
-    user_services: UserServices = Depends(get_user_services)
+    body: schemas.UserCreate
 ) -> Any:
     """
     Create new user without the need to be logged in.
     """
     try:
-        user = user_services.create_user_open(body=body)
+        user = user_redis_services.create_user_open(body=body)
     except UserForbiddenRegiser:
         raise HTTPException(
             status_code=403,
@@ -116,14 +111,14 @@ def create_user_open(
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user_by_id(
     user_id: int,
-    current_user: models.User = Depends(get_current_active_user),
-    user_services: UserServices = Depends(get_user_services)
+    current_user: models.User = Depends(get_current_active_user)
 ) -> Any:
     """
     Get a specific user by id.
     """
     try:
-        user = user_services.get(id=user_id)
+        print("Ok")
+        user = user_redis_services.get(id=user_id)
     except UserNotFound:
         raise HTTPException(
             status_code=404,
@@ -138,14 +133,13 @@ def update_user(
     *,
     user_id: int,
     body: schemas.UserUpdate,
-    current_user: models.User = Depends(get_current_active_superuser),
-    user_services: UserServices = Depends(get_user_services)
+    current_user: models.User = Depends(get_current_active_superuser)
 ) -> Any:
     """
     Update a specific user by id.
     """
     try:
-        user = user_services.update(id=user_id, body=body)
+        user = user_redis_services.update(id=user_id, body=body)
     except UserNotFound:
         raise HTTPException(
             status_code=404,

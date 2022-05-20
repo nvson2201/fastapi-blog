@@ -1,5 +1,4 @@
-from typing import Any, Dict, Optional, Union
-from sqlalchemy.orm import Session
+from typing import Any, Dict, Optional, Union, Type
 
 from app.plugins.redis import redis_services
 
@@ -11,7 +10,9 @@ from app.decorators.component import ComponentRepository
 class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
                                          UpdateSchemaType]):
 
-    def __init__(self,  _crud_component: ComponentRepository, prefix: str):
+    def __init__(self,  model: Type[ModelType],
+                 _crud_component: ComponentRepository, prefix: str):
+        self.model = model
         self._crud_component = _crud_component
         self.prefix = prefix
 
@@ -28,34 +29,40 @@ class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
             data=data.__dict__
         )
 
-    def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        cache_data = self._get_cache(id)
+    def _delete_cache(self, id: str):
+        redis_services.del_cache(
+            id=str(id),
+            prefix=self.prefix
+        )
 
+    def get(self, id: Any) -> Optional[ModelType]:
+        cache_data = self._get_cache(id)
         if cache_data:
-            obj = ModelType(**cache_data)
+            obj = self.model(**cache_data)
         else:
-            obj = self.crud_component.get(db, id)
+            obj = self.crud_component.get(id)
 
         self._set_cache(id, data=obj)
 
         return obj
 
-    def create(self, db: Session, *, body: CreateSchemaType) -> ModelType:
-        obj = self.crud_component.create(db, body=body)
+    def create(self, *, body: CreateSchemaType) -> ModelType:
+        obj = self.crud_component.create(body=body)
         self._set_cache(id=obj.id, data=obj)
 
         return obj
 
     def update(
         self,
-        db: Session,
         obj: ModelType,
         *,
         body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj = self.crud_component.update(db, obj=obj, body=body)
+        obj = self.crud_component.update(obj=obj, body=body)
         self._set_cache(id=obj.id, data=obj)
         return obj
 
-    def remove(self, db: Session, *, id: int) -> ModelType:
-        pass
+    def remove(self, *, id: int) -> ModelType:
+        obj = self.crud_component.remove(id)
+        self._delete_cache(id)
+        return obj

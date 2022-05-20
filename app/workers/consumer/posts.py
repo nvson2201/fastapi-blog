@@ -1,7 +1,5 @@
-from app.api.dependencies.post_services import get_post_services
-
-post_services = get_post_services()
+from app.services.posts import post_redis_services
 
 
 def update_view(msg):
-    post_services.update_views(msg['id'])
+    post_redis_services.update_views(msg['id'])

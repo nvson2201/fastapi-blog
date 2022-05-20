@@ -2,7 +2,7 @@ from urllib import error
 
 import click
 
-from app.api.dependencies import user_services
+from app.api.dependencies import user_redis_services
 
 
 @click.command()
@@ -11,7 +11,7 @@ def read_user_by_id(user_id):
     """
     Get a specific user by id.
     """
-    user = user_services.get(id=user_id)
+    user = user_redis_services.get(id=user_id)
     if not user:
         raise error.HTTPError(
             code=404, msg="User not found", url=None,
