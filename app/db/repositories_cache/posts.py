@@ -7,10 +7,13 @@ from app.decorators.component import (
 from app.db.repositories_cache.base import RedisDecorator
 from app.db import repositories
 from app.config import settings
+from app.db import db
+from app.db.repositories.posts import PostRepository
 
 
 class PostRedisRepository(
-    RedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
+    RedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType],
+    PostRepository
 ):
 
     def create_with_owner(self,
@@ -33,11 +36,13 @@ class PostRedisRepository(
     def update_views(self, id: Any):
         post = self.crud_component.update_views(id)
         self._set_cache(id=post.id, data=post)
+
         return post
 
 
 posts = PostRedisRepository(
     Post,
+    db,
     repositories.posts,
     settings.REDIS_PREFIX_POST
 )

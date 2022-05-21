@@ -1,7 +1,5 @@
-from app.db import repositories
-from typing import Union, Any
+from typing import Any
 from datetime import timedelta
-
 
 from app import schemas
 from app.config import settings
@@ -12,7 +10,6 @@ from app.exceptions.users import (
     UserIncorrectCredentials)
 from app.exceptions.tokens import InvalidToken
 from app.db.repositories_cache.users import UserRedisRepository
-from app.db.repositories.users import UserRepository
 from app.utils import security
 from app.utils.mail import (
     generate_password_reset_token,
@@ -25,18 +22,17 @@ from app.db import repositories_cache
 
 class LoginServices:
 
-    def __init__(self,
-                 crud_engine: Union[UserRedisRepository, UserRepository]):
-        self.crud_engine = crud_engine
+    def __init__(self, repository: UserRedisRepository):
+        self.repository = repository
 
     def login_access_token(self, email: str, password: str) -> Any:
-        user = self.crud_engine.authenticate(
+        user = self.repository.authenticate(
             email=email, password=password
         )
 
         if not user:
             raise UserIncorrectCredentials
-        elif not self.crud_engine.is_active(user):
+        elif not self.repository.is_active(user):
             raise UserInactive
 
         access_token_expires = timedelta(
@@ -50,7 +46,7 @@ class LoginServices:
         }
 
     def recover_password(self, email: str) -> Any:
-        user = self.crud_engine.get_by_email(email=email)
+        user = self.repository.get_by_email(email=email)
 
         if not user:
             raise UserNotFound
@@ -68,17 +64,16 @@ class LoginServices:
         id = verify_password_reset_token(token)
         if not id:
             raise InvalidToken
-        user = self.crud_engine.get(id)
+        user = self.repository.get(id)
         if not user:
             raise UserNotFound
-        elif not self.crud_engine.is_active(user):
+        elif not self.repository.is_active(user):
             raise UserInactive
         hashed_password = get_password_hash(new_password.body)
         user.hashed_password = hashed_password
 
-        self.crud_engine.update(id=user.id, body=user)
+        self.repository.update(id=user.id, body=user)
         return {"msg": "Password updated successfully"}
 
 
-login_services = LoginServices(crud_engine=repositories.users)
-login_redis_services = LoginServices(crud_engine=repositories_cache.users)
+login_services = LoginServices(repository=repositories_cache.users)

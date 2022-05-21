@@ -8,7 +8,7 @@ from app.api.dependencies import authentication
 from app.exceptions.tokens import InvalidToken
 from app.exceptions.users import (
     UserNotFound, UserInactive, UserIncorrectCredentials)
-from app.services.login import login_redis_services
+from app.services.login import login_services
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ def login_access_token(
     OAuth2 compatible token login, get an access token for future requests
     """
     try:
-        token = login_redis_services.login_access_token(
+        token = login_services.login_access_token(
             email=form_data.username, password=form_data.password
         )
     except UserIncorrectCredentials:
@@ -55,7 +55,7 @@ def recover_password(
     """
 
     try:
-        login_redis_services.recover_password(email=email)
+        login_services.recover_password(email=email)
     except UserNotFound:
         HTTPException(
             status_code=404,
@@ -74,7 +74,7 @@ def reset_password(
     Reset password
     """
     try:
-        login_redis_services.recover_password(
+        login_services.recover_password(
             token=token, new_password=new_password)
     except InvalidToken:
         raise HTTPException(status_code=401, detail="Invalid token")

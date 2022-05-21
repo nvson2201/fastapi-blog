@@ -1,18 +1,21 @@
 from typing import Any, Dict, Optional, Union, Type
 
 from app.plugins.redis import redis_services
+from sqlalchemy.orm import Session
 
 from app.decorators.decorator import (
     RepositoryDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
 from app.decorators.component import ComponentRepository
 
 
-class RedisDecorator(RepositoryDecorator[ModelType, CreateSchemaType,
-                                         UpdateSchemaType]):
+class RedisDecorator(
+    RepositoryDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
+):
 
-    def __init__(self,  model: Type[ModelType],
+    def __init__(self,  model: Type[ModelType], db: Session,
                  _crud_component: ComponentRepository, prefix: str):
         self.model = model
+        self.db = db
         self._crud_component = _crud_component
         self.prefix = prefix
 

@@ -1,5 +1,3 @@
-from app.db import repositories
-from typing import Union
 from jose import jwt
 from pydantic import ValidationError
 
@@ -7,9 +5,7 @@ from app.config import settings
 from app.models.users import User
 from app.exceptions.users import UserNotFound, UserInvalidCredentials
 
-
 from app.db.repositories_cache.users import UserRedisRepository
-from app.db.repositories.users import UserRepository
 from app.utils import security
 from app.schemas.tokens import TokenPayload
 from app.db import repositories_cache
@@ -17,9 +13,8 @@ from app.db import repositories_cache
 
 class AuthenticationService:
 
-    def __init__(self,
-                 crud_engine: Union[UserRedisRepository, UserRepository]):
-        self.crud_engine = crud_engine
+    def __init__(self, repository: UserRedisRepository):
+        self.repository = repository
 
     def get_current_user(self, token: str) -> User:
         try:
@@ -31,7 +26,7 @@ class AuthenticationService:
         except (jwt.JWTError, ValidationError):
             raise UserInvalidCredentials
 
-        user = self.crud_engine.get(id=token_data.sub)
+        user = self.repository.get(id=token_data.sub)
 
         if not user:
             raise UserNotFound
@@ -39,6 +34,4 @@ class AuthenticationService:
         return user
 
 
-auth_services = AuthenticationService(crud_engine=repositories.users)
-auth_redis_services = AuthenticationService(
-    crud_engine=repositories_cache.users)
+auth_services = AuthenticationService(repository=repositories_cache.users)

@@ -1,9 +1,6 @@
-from app.db import repositories
-from typing import List, Union, Optional
-
+from typing import List, Optional
 
 from sqlalchemy import exc
-
 
 from app.config import settings
 from app.models.users import User
@@ -13,22 +10,20 @@ from app.exceptions.users import (
     UserInactive, UserNotSuper)
 from app.utils.mail import send_new_account_email
 from app.db.repositories_cache.users import UserRedisRepository
-from app.db.repositories.users import UserRepository
 from app.schemas.datetime import DateTime
 from app.db import repositories_cache
 
 
 class UserServices:
 
-    def __init__(self,
-                 crud_engine: Union[UserRedisRepository, UserRepository]):
-        self.crud_engine = crud_engine
+    def __init__(self, repository: UserRedisRepository):
+        self.repository = repository
 
     def get_by_email(self, email: str) -> Optional[User]:
-        return self.crud_engine.get_by_email(email=email)
+        return self.repository.get_by_email(email=email)
 
     def get(self, id: str) -> User:
-        user = self.crud_engine.get(id)
+        user = self.repository.get(id)
 
         if not user:
             raise UserNotFound
@@ -36,13 +31,13 @@ class UserServices:
         return user
 
     def update(self, id: str, body: UserUpdate) -> User:
-        user = self.crud_engine.get(id)
+        user = self.repository.get(id)
 
         if not user:
             raise UserNotFound
 
         try:
-            user = self.crud_engine.update(
+            user = self.repository.update(
                 user, body=body)
         except exc.IntegrityError:
             raise UserDuplicate
@@ -50,12 +45,12 @@ class UserServices:
         return user
 
     def create(self, body: UserCreate) -> User:
-        user = self.crud_engine.get_by_email(email=body.email)
+        user = self.repository.get_by_email(email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(body=body)
+        user = self.repository.create(body=body)
 
         if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
@@ -71,12 +66,12 @@ class UserServices:
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
-        user = self.crud_engine.get_by_email(email=body.email)
+        user = self.repository.get_by_email(email=body.email)
 
         if user:
             raise UserDuplicate
 
-        user = self.crud_engine.create(body=body)
+        user = self.repository.create(body=body)
 
         if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
@@ -88,16 +83,16 @@ class UserServices:
         return user
 
     def authenticate(self, email: str, password: str) -> Optional[User]:
-        return self.crud_engine.authenticate(
+        return self.repository.authenticate(
             email=email, password=password)
 
     def is_active(self, user: User) -> bool:
-        if not self.crud_engine.is_active(user=user):
+        if not self.repository.is_active(user=user):
             raise UserInactive
         return user
 
     def is_superuser(self, user: User) -> bool:
-        if not self.crud_engine.is_superuser(user=user):
+        if not self.repository.is_superuser(user=user):
             raise UserNotSuper
         return user
 
@@ -107,7 +102,7 @@ class UserServices:
         date_end: DateTime = None,
     ) -> List[User]:
 
-        users = self.crud_engine.get_multi(
+        users = self.repository.get_multi(
             skip=skip, limit=limit,
             date_start=date_start,
             date_end=date_end
@@ -116,5 +111,4 @@ class UserServices:
         return users
 
 
-user_services = UserServices(crud_engine=repositories.users)
-user_redis_services = UserServices(crud_engine=repositories_cache.users)
+user_services = UserServices(repository=repositories_cache.users)

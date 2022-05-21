@@ -7,8 +7,9 @@ from app.decorators.component import (
     ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
-class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
-                                         UpdateSchemaType]):
+class BaseRepository(
+        ComponentRepository[ModelType, CreateSchemaType, UpdateSchemaType]
+):
 
     def __init__(self, model: Type[ModelType], db: Session):
         self.model = model

@@ -6,7 +6,7 @@ from app import models, schemas
 from app.db import repositories
 from app.api.dependencies import authentication
 from app.exceptions.posts import PostNotFound
-from app.services.posts import post_redis_services
+from app.services.posts import post_services
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def read_posts(
     """
     Retrieve posts.
     """
-    posts = post_redis_services.get_multi_by_owner(
+    posts = post_services.get_multi_by_owner(
         author_id=author_id, skip=skip, limit=limit
     )
     return posts
@@ -36,7 +36,7 @@ def create_post(
     """
     Create new post.
     """
-    post = post_redis_services.create_with_owner(
+    post = post_services.create_with_owner(
         body=body, author_id=current_user.id)
     return post
 
@@ -52,13 +52,13 @@ def update_post(
     """
     Update an post.
     """
-    post = post_redis_services.get(id)
+    post = post_services.get(id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if (not repositories.users.is_superuser(current_user)
             and (post.author_id != current_user.id)):
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    post = post_redis_services.update(post, body=body)
+    post = post_services.update(post, body=body)
     return post
 
 
@@ -71,7 +71,7 @@ def read_post(
     Get post by ID.
     """
     try:
-        post = post_redis_services.get(id)
+        post = post_services.get(id)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
@@ -88,7 +88,7 @@ def delete_post(
     Delete an post.
     """
     try:
-        post = post_redis_services.remove(id)
+        post = post_services.remove(id)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
