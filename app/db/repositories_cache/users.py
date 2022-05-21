@@ -23,6 +23,13 @@ class UserRedisRepository(
 
         return user
 
+    def get_by_username(self, *, username: str) -> Optional[User]:
+        user = self.crud_component.get_by_username(username=username)
+        if user:
+            self._set_cache(id=user.id, data=user)
+
+        return user
+
     def create(self, body: UserCreate):
         user = self.crud_component.create(body=body)
         self._set_cache(id=user.id, data=user)

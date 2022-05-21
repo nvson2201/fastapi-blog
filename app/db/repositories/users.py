@@ -18,6 +18,12 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         user = q.first()
         return user
 
+    def get_by_username(self, *, username: str) -> Optional[User]:
+        q = self.db.query(User)
+        q = q.filter(User.username == username)
+        user = q.first()
+        return user
+
     def create(self, *, body: Union[UserCreate, Dict[str, Any]]) -> User:
 
         if isinstance(body, dict):

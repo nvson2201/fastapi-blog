@@ -13,6 +13,7 @@ def init_db(db: Session) -> None:
         first_superuser = schemas.UserCreate(
             email=settings.FIRST_SUPERUSER,
             password=settings.FIRST_SUPERUSER_PASSWORD,
+            username=settings.FIRST_SUPERUSER_USERNAME,
             is_superuser=True,
         )
         user = repositories.users.create(body=first_superuser)

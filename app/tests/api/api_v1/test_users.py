@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.schemas.users import UserCreate
-from app.tests.utils.utils import random_email, random_password
+from app.tests.utils.utils import (
+    random_email, random_password, random_lower_string)
 from app.db.repositories import users
 from app.tests.utils.users import create_random_user
 
@@ -39,7 +40,8 @@ def test_create_user_new_email(
 ) -> None:
     email = random_email()
     password = random_password()
-    data = {"email": email, "password": password}
+    username = random_lower_string()
+    data = {"email": email, "password": password, "username": username}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
         headers=superuser_token_headers, json=data,
@@ -54,9 +56,10 @@ def test_create_user_new_email(
 def test_get_existing_user(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    username = random_email()
+    email = random_email()
     password = random_password()
-    user_body = UserCreate(email=username, password=password)
+    username = random_lower_string()
+    user_body = UserCreate(email=email, password=password, username=username)
     user = users.create(body=user_body)
     user_id = user.id
     r = client.get(
@@ -65,7 +68,7 @@ def test_get_existing_user(
     )
     assert 200 <= r.status_code < 300
     api_user = r.json()
-    existing_user = users.get_by_email(email=username)
+    existing_user = users.get_by_email(email=email)
     assert existing_user
     assert existing_user.email == api_user["email"]
 
@@ -75,9 +78,11 @@ def test_create_user_existing_username(
 ) -> None:
     email = random_email()
     password = random_password()
-    user_body = UserCreate(email=email, password=password)
+    username = random_lower_string()
+    user_body = UserCreate(email=email, password=password, username=username)
     users.create(body=user_body)
-    data = {"email": email, "password": password}
+
+    data = {"email": email, "password": password, "username": username}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
         headers=superuser_token_headers, json=data,
@@ -92,6 +97,7 @@ def test_create_user_by_normal_user(
 ) -> None:
     username = random_email()
     password = random_password()
+
     data = {"username": username, "password": password}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
@@ -103,14 +109,18 @@ def test_create_user_by_normal_user(
 def test_retrieve_users(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    username = random_email()
+    email = random_email()
     password = random_password()
-    user_body = UserCreate(email=username, password=password)
+    username = random_lower_string()
+    user_body = UserCreate(
+        email=email, password=password, username=username)
     users.create(body=user_body)
 
-    username2 = random_email()
+    email2 = random_email()
     password2 = random_password()
-    user_body2 = UserCreate(email=username2, password=password2)
+    username2 = random_lower_string()
+    user_body2 = UserCreate(
+        email=email2, password=password2, username=username2)
     users.create(body=user_body2)
 
     r = client.get(f"{settings.API_V1_STR}/users/",

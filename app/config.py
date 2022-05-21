@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
     FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
+    FIRST_SUPERUSER_USERNAME = "admin"
     FIRST_SUPERUSER_PASSWORD: str = "string11A"
     USERS_OPEN_REGISTRATION: bool = False
 

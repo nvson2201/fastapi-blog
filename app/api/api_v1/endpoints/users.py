@@ -117,7 +117,6 @@ def read_user_by_id(
     Get a specific user by id.
     """
     try:
-        print("Ok")
         user = user_services.get(id=user_id)
     except UserNotFound:
         raise HTTPException(

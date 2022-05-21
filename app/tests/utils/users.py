@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.users import User
 from app.schemas.users import UserCreate, UserUpdate
-from app.tests.utils.utils import random_email, random_password
+from app.tests.utils.utils import (
+    random_email, random_password, random_lower_string)
 
 
 def user_authentication_headers(
@@ -25,7 +26,9 @@ def user_authentication_headers(
 def create_random_user(db: Session) -> User:
     email = random_email()
     password = random_password()
-    user_body = UserCreate(email=email, password=password)
+    username = random_lower_string()
+    user_body = UserCreate(email=email, password=password, username=username)
+
     user = users.create(body=user_body)
     return user
 
@@ -38,9 +41,12 @@ def authentication_token_from_email(
     If the user doesn't exist it is created first.
     """
     password = random_password()
+    username = random_lower_string()
     user = users.get_by_email(email=email)
     if not user:
-        user_update_body = UserCreate(email=email, password=password)
+
+        user_update_body = UserCreate(
+            email=email, password=password, username=username)
         user = users.create(body=user_update_body)
     else:
         user_update_body = UserUpdate(password=password)

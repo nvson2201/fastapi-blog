@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Type
 
 from sqlalchemy import exc
+from sqlalchemy.orm import Session
 
 from app.models.posts import Post
 from app.schemas.posts import PostUpdate, PostCreate
@@ -8,12 +9,25 @@ from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
 from app.db import repositories_cache
+from app.config import settings
+from app.decorators.component import ModelType
+from app.db import repositories
+from app.db import db
+from app.decorators.component import ComponentRepository
 
 
-class PostServices:
+class PostServices(PostRedisRepository):
 
-    def __init__(self, repository: PostRedisRepository):
+    def __init__(
+        self,
+        repository: PostRedisRepository,
+        model: Type[ModelType],
+        db: Session,
+        _crud_component: ComponentRepository,
+        prefix: str
+    ):
         self.repository = repository
+        super().__init__(model, db, _crud_component, prefix)
 
     def get(self, id: str):
         post = self.repository.get(id)
@@ -62,4 +76,10 @@ class PostServices:
         self.repository.update_views(id)
 
 
-post_services = PostServices(repository=repositories_cache.posts)
+post_services = PostServices(
+    repository=repositories_cache.posts,
+    model=Post,
+    db=db,
+    _crud_component=repositories.posts,
+    prefix=settings.REDIS_PREFIX_USER
+)
