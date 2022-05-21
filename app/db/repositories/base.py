@@ -32,7 +32,11 @@ class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
         return objs
 
     def create(self, *, body: CreateSchemaType) -> ModelType:
-        body_dict = jsonable_encoder(body)
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
+
         obj = self.model(**body_dict)
         self.db.add(obj)
         self.db.commit()

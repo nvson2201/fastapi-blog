@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 class PostBase(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
+    author_id: Optional[int] = None
 
 
 class PostCreate(PostBase):
@@ -23,17 +25,16 @@ class PostUpdateView(BaseModel):
 
 
 class PostInDBBase(PostBase):
-    id: int
-    title: str
-    body: str
-    author_id: int
-    views: int
+    id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    views: Optional[int] = None
 
     class Config:
         orm_mode = True
 
 
-class Post(PostInDBBase):
+class Post(PostInDBBase):  # response_model
     pass
 
 

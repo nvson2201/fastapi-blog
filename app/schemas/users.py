@@ -1,6 +1,5 @@
 from typing import Optional
 from datetime import datetime
-
 from pydantic import BaseModel, EmailStr, validator
 
 
@@ -10,8 +9,6 @@ class UserBase(BaseModel):
     is_banned: Optional[bool] = False
     is_superuser: bool = False
     full_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
 
 
 class UserCreate(UserBase):
@@ -78,17 +75,19 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
 
 
-class User(UserInDBBase):
+class User(UserInDBBase):  # response_model
     pass
 
 
 class UserInDB(UserInDBBase):
-    hashed_password: str
+    hashed_password: Optional[str] = None
 
 
 class UserPassword(BaseModel):

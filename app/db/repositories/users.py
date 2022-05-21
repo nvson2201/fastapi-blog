@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Union
 from app.utils.security import get_password_hash, verify_password
 from app.db.repositories.base import BaseRepository
 from app.models.users import User
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import UserCreate, UserUpdate, UserInDB
 from app.schemas.datetime import DateTime
 from app.config import settings
 from app.db import db
@@ -18,32 +18,46 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         user = q.first()
         return user
 
-    def create(self, *, body: UserCreate) -> User:
-        user = User()
-        exclude_keys_in_user_model = ['password', 'created_at']
+    def create(self, *, body: Union[UserCreate, Dict[str, Any]]) -> User:
 
-        for key, value in body.__dict__.items():
-            if key not in exclude_keys_in_user_model:
-                setattr(user, key, value)
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
 
-        user.hashed_password = get_password_hash(body.password)
-        user.created_at = settings.current_time()
+        hashed_password = get_password_hash(body_dict['password'])
+        created_at = settings.current_time()
 
-        return super().create(body=user)
+        create_data = UserInDB(
+            hashed_password=hashed_password,
+            created_at=created_at,
+            updated_at=created_at,
+            **body_dict
+        )
+
+        return super().create(body=create_data)
 
     def update(
         self,
         user: User, *, body: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
-        if isinstance(body, dict):
-            update_data = body
-        else:
-            update_data = body.dict(exclude_unset=True)
 
-        if "password" in update_data:
-            hashed_password = get_password_hash(update_data["password"])
-            del update_data["password"]
-            update_data["hashed_password"] = hashed_password
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
+
+        if 'password' in body_dict:
+            hashed_password = get_password_hash(body_dict['password'])
+            body_dict['hashed_password'] = hashed_password
+            del body_dict['password']
+
+        updated_at = settings.current_time()
+
+        update_data = UserInDB(
+            updated_at=updated_at,
+            **body_dict
+        )
 
         return super().update(user, body=update_data)
 

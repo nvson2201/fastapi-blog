@@ -37,16 +37,16 @@ def test_get_users_normal_user_me(
 def test_create_user_new_email(
     client: TestClient, superuser_token_headers: dict, db: Session
 ) -> None:
-    username = random_email()
+    email = random_email()
     password = random_password()
-    data = {"email": username, "password": password}
+    data = {"email": email, "password": password}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
         headers=superuser_token_headers, json=data,
     )
     assert 200 <= r.status_code < 300
     created_user = r.json()
-    user = users.get_by_email(email=username)
+    user = users.get_by_email(email=email)
     assert user
     assert user.email == created_user["email"]
 
@@ -92,7 +92,7 @@ def test_create_user_by_normal_user(
 ) -> None:
     username = random_email()
     password = random_password()
-    data = {"email": username, "password": password}
+    data = {"username": username, "password": password}
     r = client.post(
         f"{settings.API_V1_STR}/users/",
         headers=normal_user_token_headers, json=data,

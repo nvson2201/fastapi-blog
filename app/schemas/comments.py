@@ -25,7 +25,7 @@ class CommentInDBBase(CommentBase):
         orm_mode = True
 
 
-class Comment(CommentInDBBase):
+class Comment(CommentInDBBase):  # response_model
     pass
 
 
