@@ -1,14 +1,14 @@
 from typing import Any, Dict, List, Optional, Type, Union
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.decorators.component import (
     ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
-class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
-                                         UpdateSchemaType]):
+class BaseRepository(
+        ComponentRepository[ModelType, CreateSchemaType, UpdateSchemaType]
+):
 
     def __init__(self, model: Type[ModelType], db: Session):
         self.model = model
@@ -32,7 +32,11 @@ class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
         return objs
 
     def create(self, *, body: CreateSchemaType) -> ModelType:
-        body_dict = jsonable_encoder(body)
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
+
         obj = self.model(**body_dict)
         self.db.add(obj)
         self.db.commit()
@@ -46,14 +50,13 @@ class BaseRepository(ComponentRepository[ModelType, CreateSchemaType,
         *,
         body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_dict = jsonable_encoder(obj)
 
         if isinstance(body, dict):
             update_data = body
         else:
             update_data = body.dict(exclude_unset=True)
 
-        for field in obj_dict:
+        for field in update_data:
             if field in update_data:
                 setattr(obj, field, update_data[field])
 

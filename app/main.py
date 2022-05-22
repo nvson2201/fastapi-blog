@@ -13,8 +13,8 @@ app.add_middleware(SessionMiddleware, secret_key="!secret")
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
+def validation_exception_handler(
+    request: Request, exc: RequestValidationError
 ):
     return JSONResponse(
         status_code=400,

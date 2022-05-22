@@ -49,11 +49,14 @@ httpcore = "==0.11.1"
 h11 = "==0.9"
 loguru = "*"
 confluent-kafka = "*"
+pytest-cov = "*"
 
 [dev-packages]
 flake8 = "*"
 autopep8 = "*"
 click = "*"
+faker = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.8"

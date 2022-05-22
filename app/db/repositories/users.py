@@ -1,51 +1,76 @@
 from typing import List
 from typing import Any, Dict, Optional, Union
 
-
-from app.utils.security import get_password_hash, verify_password
-from app.db.repositories.base import BaseRepository
-from app.models.users import User
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import UserCreate, UserUpdate, UserInDB
+from app.schemas.profiles import Profile
 from app.schemas.datetime import DateTime
+from app.models.users import User
+from app.models.followers_to_followings import FollowersToFollowings
+from app.exceptions.profile import UserIsNotFollowed
+from app.db.repositories.base import BaseRepository
+from app.utils.security import get_password_hash, verify_password
 from app.config import settings
 from app.db import db
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
+
     def get_by_email(self, *, email: str) -> Optional[User]:
         q = self.db.query(User)
         q = q.filter(User.email == email)
         user = q.first()
+
         return user
 
-    def create(self, *, body: UserCreate) -> User:
-        user = User()
-        exclude_keys_in_user_model = ['password', 'created_at']
+    def get_by_username(self, *, username: str) -> Optional[User]:
+        q = self.db.query(User)
+        q = q.filter(User.username == username)
+        user = q.first()
 
-        for key, value in body.__dict__.items():
-            if key not in exclude_keys_in_user_model:
-                setattr(user, key, value)
+        return user
 
-        user.hashed_password = get_password_hash(body.password)
-        user.created_at = settings.current_time()
+    def create(self, *, body: Union[UserCreate, Dict[str, Any]]) -> User:
 
-        return super().create(body=user)
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
+
+        hashed_password = get_password_hash(body_dict['password'])
+        created_at = settings.current_time()
+
+        create_data = UserInDB(
+            hashed_password=hashed_password,
+            created_at=created_at,
+            updated_at=created_at,
+            **body_dict
+        )
+
+        return super().create(body=create_data)
 
     def update(
         self,
         user: User, *, body: Union[UserUpdate, Dict[str, Any]]
     ) -> User:
+
         if isinstance(body, dict):
-            update_data = body
+            body_dict = body
         else:
-            update_data = body.dict(exclude_unset=True)
+            body_dict = body.dict(exclude_unset=True)
 
-        if "password" in update_data:
-            hashed_password = get_password_hash(update_data["password"])
-            del update_data["password"]
-            update_data["hashed_password"] = hashed_password
+        if 'password' in body_dict:
+            hashed_password = get_password_hash(body_dict['password'])
+            body_dict['hashed_password'] = hashed_password
+            del body_dict['password']
 
-        return super().update(user=user, body=update_data)
+        updated_at = settings.current_time()
+
+        update_data = UserInDB(
+            updated_at=updated_at,
+            **body_dict
+        )
+
+        return super().update(user, body=update_data)
 
     def authenticate(self, *,
                      email: str, password: str) -> Optional[User]:
@@ -84,6 +109,89 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         users = q.all()
 
         return users
+
+    def is_user_following_for_another(
+        self,
+        *,
+        target_user: Optional[Union[User, Profile]],
+        requested_user: Optional[Union[User, Profile]]
+    ) -> bool:
+        q = self.db.query(User)
+
+        requested_user = q.filter(
+            User.username == requested_user.username).first()
+
+        target_user = q.filter(
+            User.username == target_user.username).first()
+
+        q = self.db.query(FollowersToFollowings)
+
+        q = q.filter(
+            FollowersToFollowings.following_id == target_user.id
+        )
+
+        followers_to_followings_record = q.filter(
+            FollowersToFollowings.follower_id == requested_user.id
+        ).first()
+
+        if followers_to_followings_record:
+            return True
+        else:
+            return False
+
+    def add_user_into_followers(
+        self,
+        *,
+        target_user: Optional[Union[User, Profile]],
+        requested_user: Optional[Union[User, Profile]]
+    ) -> None:
+        q = self.db.query(User)
+
+        requested_user = q.filter(
+            User.username == requested_user.username).first()
+
+        target_user = q.filter(
+            User.username == target_user.username).first()
+
+        followers_to_followings_record = FollowersToFollowings()
+
+        followers_to_followings_record.follower_id = requested_user.id
+        followers_to_followings_record.following_id = target_user.id
+
+        self.db.add(followers_to_followings_record)
+        self.db.commit()
+        self.db.refresh(followers_to_followings_record)
+
+    def remove_user_from_followers(
+        self,
+        *,
+        target_user: Optional[Union[User, Profile]],
+        requested_user: Optional[Union[User, Profile]]
+    ) -> None:
+
+        q = self.db.query(User)
+
+        requested_user = q.filter(
+            User.username == requested_user.username).first()
+
+        target_user = q.filter(
+            User.username == target_user.username).first()
+
+        q = self.db.query(FollowersToFollowings)
+
+        q = q.filter(
+            FollowersToFollowings.following_id == target_user.id
+        )
+
+        followers_to_followings_record = q.filter(
+            FollowersToFollowings.follower_id == requested_user.id
+        ).first()
+
+        if not followers_to_followings_record:
+            raise UserIsNotFollowed
+
+        self.db.delete(followers_to_followings_record)
+        self.db.commit()
 
 
 users = UserRepository(User, db)

@@ -1,6 +1,5 @@
 from typing import Optional
 from datetime import datetime
-
 from pydantic import BaseModel, EmailStr, validator
 
 
@@ -10,14 +9,13 @@ class UserBase(BaseModel):
     is_banned: Optional[bool] = False
     is_superuser: bool = False
     full_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    username: Optional[str] = None
 
 
 class UserCreate(UserBase):
     email: EmailStr
     password: str
-    full_name: Optional[str] = None
+    username: str
 
     @validator('full_name')
     def full_name_validator(cls, v):
@@ -48,14 +46,14 @@ class UserCreate(UserBase):
 class UserUpdate(UserBase):
     password: Optional[str] = None
     email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
+    username: Optional[str] = None
 
-    @validator('full_name')
-    def full_name_validator(cls, v):
-        if not v.replace(" ", "").isalpha():
-            raise ValueError(
-                'The full name must contain alpha characters only.'
-            )
+    # @validator('username')
+    # def full_name_validator(cls, v):
+    #     if not v.replace(" ", "").isalpha():
+    #         raise ValueError(
+    #             'The username must contain alpha characters only.'
+    #         )
 
     @validator('password')
     def password_validate(cls, v):
@@ -78,17 +76,19 @@ class UserUpdate(UserBase):
 
 class UserInDBBase(UserBase):
     id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
 
 
-class User(UserInDBBase):
+class User(UserInDBBase):  # response_model
     pass
 
 
 class UserInDB(UserInDBBase):
-    hashed_password: str
+    hashed_password: Optional[str] = None
 
 
 class UserPassword(BaseModel):

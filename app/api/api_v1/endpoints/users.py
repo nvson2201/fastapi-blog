@@ -11,7 +11,7 @@ from app.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.schemas.datetime import DateTime
-from app.services.users import user_redis_services
+from app.services.users import user_services
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ def read_users(
     """
     Retrieve users by admin.
     """
-    users = user_redis_services.get_multi(
+    users = user_services.get_multi(
         skip=skip, limit=limit,
         date_start=date_start, date_end=date_end
     )
@@ -44,7 +44,7 @@ def create_user(
     Create new user by admin.
     """
     try:
-        user = user_redis_services.create(body=body)
+        user = user_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -64,7 +64,7 @@ def update_user_me(
     Update own user.
     """
     try:
-        user = user_redis_services.update(id=current_user.id, body=body)
+        user = user_services.update(id=current_user.id, body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -93,7 +93,7 @@ def create_user_open(
     Create new user without the need to be logged in.
     """
     try:
-        user = user_redis_services.create_user_open(body=body)
+        user = user_services.create_user_open(body=body)
     except UserForbiddenRegiser:
         raise HTTPException(
             status_code=403,
@@ -117,8 +117,7 @@ def read_user_by_id(
     Get a specific user by id.
     """
     try:
-        print("Ok")
-        user = user_redis_services.get(id=user_id)
+        user = user_services.get(id=user_id)
     except UserNotFound:
         raise HTTPException(
             status_code=404,
@@ -139,7 +138,7 @@ def update_user(
     Update a specific user by id.
     """
     try:
-        user = user_redis_services.update(id=user_id, body=body)
+        user = user_services.update(id=user_id, body=body)
     except UserNotFound:
         raise HTTPException(
             status_code=404,

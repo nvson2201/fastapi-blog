@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
     FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
+    FIRST_SUPERUSER_USERNAME = "admin"
     FIRST_SUPERUSER_PASSWORD: str = "string11A"
     USERS_OPEN_REGISTRATION: bool = False
 
@@ -45,6 +46,8 @@ class Settings(BaseSettings):
     KAFKA_PRODUCER_CONFIG = {
         'bootstrap.servers': KAFKA_PRODUCER_BOOTSTRAP_URL
     }
+
+    EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
 
     def past_week(self):
         return datetime.datetime.utcnow() - datetime.timedelta(weeks=1)

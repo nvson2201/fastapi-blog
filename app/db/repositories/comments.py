@@ -8,7 +8,9 @@ from app.schemas.comments import CommentCreate, CommentUpdate
 from app.db import db
 
 
-class CommentRepository(BaseRepository[Comment, CommentCreate, CommentUpdate]):
+class CommentRepository(
+        BaseRepository[Comment, CommentCreate, CommentUpdate]
+):
     def create_with_owner(
         self, *, body: CommentCreate,
         author_id: int, post_id: int

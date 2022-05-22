@@ -1,10 +1,10 @@
-from typing import List, Any
+from typing import List, Any, Union, Dict
 
-from fastapi.encoders import jsonable_encoder
 
 from app.db.repositories.base import BaseRepository
 from app.models.posts import Post
-from app.schemas.posts import PostCreate, PostUpdate
+from app.schemas.posts import PostCreate, PostUpdate, PostInDB
+from app.config import settings
 from app.db import db
 
 
@@ -12,14 +12,22 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     def create_with_owner(
         self, *, body: PostCreate, author_id: int
     ) -> Post:
-        body_dict = jsonable_encoder(body)
-        post = self.model(**body_dict, author_id=author_id)
-        post.views = 0
-        self.db.add(post)
-        self.db.commit()
-        self.db.refresh(post)
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
 
-        return post
+        created_at = settings.current_time()
+
+        create_data = PostInDB(
+            views=0,
+            created_at=created_at,
+            updated_at=created_at,
+            author_id=author_id,
+            **body_dict
+        )
+
+        return super().create(body=create_data)
 
     def get_multi_by_owner(
         self, *, author_id: int, skip: int = 0, limit: int = 100
@@ -33,6 +41,24 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         posts = q.all()
 
         return posts
+
+    def update(
+        self,
+        post: Post, *, body: Union[PostUpdate, Dict[str, Any]]
+    ) -> Post:
+        if isinstance(body, dict):
+            body_dict = body
+        else:
+            body_dict = body.dict(exclude_unset=True)
+
+        updated_at = settings.current_time()
+
+        update_data = PostInDB(
+            updated_at=updated_at,
+            **body_dict
+        )
+
+        return super().update(post, body=update_data)
 
     def update_views(self, id: Any):
         q = self.db.query(self.model)

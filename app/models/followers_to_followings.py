@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 
 from app.plugins.mysql.base_class import Base
@@ -13,7 +13,6 @@ class FollowersToFollowings(Base):
 
     __tablename__ = "followers_to_followings"
     id = Column(Integer, primary_key=True, index=True)
-    body = Column(String(255))
 
     follower_id = Column(Integer, ForeignKey(
         "users.id", ondelete="CASCADE"), index=True)
@@ -22,9 +21,3 @@ class FollowersToFollowings(Base):
     following_id = Column(Integer, ForeignKey(
         "users.id", ondelete="CASCADE"), index=True)
     following = relationship("User", foreign_keys=[following_id])
-
-    def __repr__(self):
-        return f"""
-                    post_id: {self.post_id},
-                    tag_id: {self.tag_id},
-                """
