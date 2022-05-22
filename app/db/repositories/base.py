@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, Type, Union
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.decorators.component import (
@@ -51,14 +50,13 @@ class BaseRepository(
         *,
         body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj_dict = jsonable_encoder(obj)
 
         if isinstance(body, dict):
             update_data = body
         else:
             update_data = body.dict(exclude_unset=True)
 
-        for field in obj_dict:
+        for field in update_data:
             if field in update_data:
                 setattr(obj, field, update_data[field])
 

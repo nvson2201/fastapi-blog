@@ -48,12 +48,12 @@ class UserUpdate(UserBase):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
 
-    @validator('username')
-    def full_name_validator(cls, v):
-        if not v.replace(" ", "").isalpha():
-            raise ValueError(
-                'The username must contain alpha characters only.'
-            )
+    # @validator('username')
+    # def full_name_validator(cls, v):
+    #     if not v.replace(" ", "").isalpha():
+    #         raise ValueError(
+    #             'The username must contain alpha characters only.'
+    #         )
 
     @validator('password')
     def password_validate(cls, v):
