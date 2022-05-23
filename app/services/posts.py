@@ -8,17 +8,18 @@ from app.schemas.posts import (
     PostUpdate, PostCreate,
     PostInResponse, ListOfPostsInResponse
 )
-from app.exceptions.posts import PostNotFound, PostDuplicate
+from app.services.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
 from app.db import repositories_cache
 from app.config import settings
-from app.decorators.component import ModelType
+from app.db.repositories_cache.decorators.component import ModelType
 from app.db import repositories
 from app.db import db
-from app.decorators.component import ComponentRepository
+from app.db.repositories_cache.decorators.component import ComponentRepository
 from app.models import User
-from app.exceptions.favorites import PostAlreadyFavoried, PostStillNotFavorited
+from app.services.exceptions.favorites import (
+    PostAlreadyFavoried, PostStillNotFavorited)
 
 
 class PostServices(PostRedisRepository):

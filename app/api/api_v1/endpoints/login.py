@@ -5,8 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app import models, schemas
 from app.api.dependencies import authentication
-from app.exceptions.tokens import InvalidToken
-from app.exceptions.users import (
+from app.services.exceptions.tokens import InvalidToken
+from app.services.exceptions.users import (
     UserNotFound, UserInactive, UserIncorrectCredentials)
 from app.services.login import login_services
 

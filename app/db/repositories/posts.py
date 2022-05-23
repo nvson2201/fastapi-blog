@@ -36,12 +36,12 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         return super().create(body=create_data)
 
     def get_multi_by_owner(
-        self, *, author_id: int, skip: int = 0, limit: int = 100
+        self, *, author_id: int, offset: int = 0, limit: int = 100
     ) -> List[Post]:
         q = self.db.query(self.model)
         q = q.filter(Post.author_id == author_id)
         q = q.limit(limit)
-        q = q.offset(skip)
+        q = q.offset(offset)
 
         posts = q.all()
 
@@ -126,8 +126,8 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
     def add_post_into_favorites(self, *, post: Post, user: User) -> None:
 
-        if self.is_post_favorited_by_user(post=post, user=user):
-            raise Exception('Already favorited!')
+        # if self.is_post_favorited_by_user(post=post, user=user):
+        #     raise Extension
 
         favorite_record = Favorite()
 
@@ -145,11 +145,19 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
         favorite_record = q.filter(Favorite.user_id == user.id).first()
 
-        if not favorite_record:
-            raise Exception('Not favorited yet!')
-
         self.db.delete(favorite_record)
         self.db.commit()
+
+    def get_posts_for_feed(
+        self, *, user: User,
+        limit: int = 20,
+        offset: int = 0
+    ) -> List[Post]:
+        """
+        Find all posts of follwing users of current user
+        Order by created time
+        """
+        pass
 
 
 posts = PostRepository(Post, db)

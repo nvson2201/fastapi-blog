@@ -4,8 +4,8 @@ from app import models
 from app.api.dependencies.authentication import (
     get_current_active_user
 )
-from app.exceptions.users import UserNotFound
-from app.exceptions.profile import (
+from app.services.exceptions.users import UserNotFound
+from app.services.exceptions.profile import (
     UnableToFollowYourself, UserIsAlreadyFollowed,
     UserIsNotFollowed, UnableToUnsubcribeFromYourself)
 

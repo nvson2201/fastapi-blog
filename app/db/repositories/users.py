@@ -6,7 +6,7 @@ from app.schemas.profiles import Profile
 from app.schemas.datetime import DateTime
 from app.models.users import User
 from app.models.followers_to_followings import FollowersToFollowings
-from app.exceptions.profile import UserIsNotFollowed
+from app.services.exceptions.profile import UserIsNotFollowed
 from app.db.repositories.base import BaseRepository
 from app.utils.security import get_password_hash, verify_password
 from app.config import settings
@@ -34,7 +34,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         requested_user: Optional[Union[User, Profile]]
     ) -> Optional[Union[User, Profile]]:
 
-        user = self.get(id)
+        user = self.get(requested_user.id)
 
         profile = Profile(**user.__dict__)
 
@@ -137,7 +137,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         return user.is_superuser
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100,
+        self, *, offset: int = 0, limit: int = 100,
         date_start: DateTime = None,
         date_end: DateTime = None,
     ) -> List[User]:
@@ -153,7 +153,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
         q = q.filter(User.created_at <= date_end.datetime)
         q = q.limit(limit)
-        q = q.offset(skip)
+        q = q.offset(offset)
 
         users = q.all()
 

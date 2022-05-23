@@ -6,6 +6,7 @@ from app.schemas.profiles import Profile
 
 
 class PostBase(BaseModel):
+    id: Optional[int] = None
     title: Optional[str] = None
     body: Optional[str] = None
     author: Optional[Profile] = None
@@ -16,6 +17,11 @@ class PostBase(BaseModel):
 
 class PostInResponse(PostBase):  # response_model
     tags: Optional[List[str]] = Field(..., alias="tagList")
+
+
+class ListOfPostsInResponse(BaseModel):
+    posts: Optional[List[PostInResponse]] = None
+    posts_count: Optional[int] = None
 
 
 class PostCreate(BaseModel):
@@ -50,8 +56,3 @@ class Post(PostInDBBase):  # response_model
 
 class PostInDB(PostInDBBase):
     pass
-
-
-class ListOfPostInResponse(BaseModel):
-    posts: List[Post]
-    posts_count: int

@@ -3,9 +3,9 @@ from typing import Any, Dict, Optional, Union, Type
 from app.plugins.redis import redis_services
 from sqlalchemy.orm import Session
 
-from app.decorators.decorator import (
+from app.db.repositories_cache.decorators.decorator import (
     RepositoryDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
-from app.decorators.component import ComponentRepository
+from app.db.repositories_cache.decorators.component import ComponentRepository
 
 
 class RedisDecorator(

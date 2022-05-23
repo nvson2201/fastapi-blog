@@ -1,4 +1,4 @@
-from app.exceptions.base import ObjectNotFound, ObjectDuplicate
+from app.services.exceptions.base import ObjectNotFound, ObjectDuplicate
 
 
 class PostNotFound(ObjectNotFound):

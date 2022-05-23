@@ -25,14 +25,14 @@ class CommentRepository(
 
     def get_multi_by_owner(
         self, *, author_id: int, post_id=int,
-        skip: int = 0, limit: int = 100
+        offset: int = 0, limit: int = 100
     ) -> List[Comment]:
 
         q = self.db.query(self.model)
         q = q.filter(Comment.author_id == author_id,
                      Comment.post_id == post_id)
         q = q.limit(limit)
-        q = q.offset(skip)
+        q = q.offset(offset)
 
         comments = q.all()
 

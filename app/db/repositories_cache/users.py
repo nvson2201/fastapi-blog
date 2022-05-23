@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 from app.models.users import User
 from app.schemas.users import UserUpdate, UserCreate
-from app.decorators.component import (
+from app.db.repositories_cache.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.db.repositories_cache.base import RedisDecorator
 from app.db.repositories.users import UserRepository

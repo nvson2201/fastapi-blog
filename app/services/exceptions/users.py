@@ -1,4 +1,4 @@
-from app.exceptions.base import (
+from app.services.exceptions.base import (
     ObjectNotFound, ObjectDuplicate, ObjectForbidden)
 
 
