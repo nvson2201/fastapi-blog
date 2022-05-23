@@ -1,22 +1,32 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from app.schemas.profiles import Profile
 
 
 class PostBase(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
-    author_id: Optional[int] = None
+    author: Optional[Profile] = None
+    tags: Optional[List[str]] = None
+    favorited: Optional[bool] = None
+    favorites_count: Optional[int] = None
 
 
-class PostCreate(PostBase):
+class PostInResponse(PostBase):  # response_model
+    tags: Optional[List[str]] = Field(..., alias="tagList")
+
+
+class PostCreate(BaseModel):
     title: str
     body: str
+    tags: Optional[List[str]] = Field([], alias="tagList")
 
 
-class PostUpdate(PostBase):
-    pass
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
 
 
 class PostUpdateView(BaseModel):
@@ -35,8 +45,13 @@ class PostInDBBase(PostBase):
 
 
 class Post(PostInDBBase):  # response_model
-    pass
+    tags: List[str] = Field(..., alias="tagList")
 
 
 class PostInDB(PostInDBBase):
     pass
+
+
+class ListOfPostInResponse(BaseModel):
+    posts: List[Post]
+    posts_count: int

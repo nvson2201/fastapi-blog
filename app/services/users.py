@@ -147,15 +147,12 @@ class UserServices(UserRedisRepository):
         requested_user: Optional[Union[User, Profile]]
     ) -> Optional[Union[User, Profile]]:
 
-        user = self.get_by_username(username=username)
+        profile = self.repository.get_profile_by_username(
+            username=username, requested_user=requested_user)
 
-        profile = Profile(**user.__dict__)
+        if not profile:
+            raise UserNotFound
 
-        if requested_user:
-            profile.following = self.repository.is_user_following_for_another(
-                target_user=user,
-                requested_user=requested_user,
-            )
         return profile
 
     def follow_for_user(

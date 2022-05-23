@@ -37,7 +37,7 @@ def login_access_token(
     return token
 
 
-@router.post("/login/test-token", response_model=schemas.User)
+@router.post("/login/test-token", response_model=schemas.UserInResponse)
 def test_token(current_user: models.User
                = Depends(authentication.get_current_active_user)) -> Any:
     """

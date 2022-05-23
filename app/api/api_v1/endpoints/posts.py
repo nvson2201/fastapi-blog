@@ -11,7 +11,7 @@ from app.services.posts import post_services
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Post])
+@router.get("/", response_model=List[schemas.PostInResponse])
 def read_posts(
     author_id: int,
     skip: int = 0,
@@ -26,7 +26,7 @@ def read_posts(
     return posts
 
 
-@router.post("/", response_model=schemas.Post)
+@router.post("/", response_model=schemas.PostInResponse)
 def create_post(
     *,
     body: schemas.PostCreate,
@@ -41,7 +41,7 @@ def create_post(
     return post
 
 
-@router.put("/{id}", response_model=schemas.Post)
+@router.put("/{id}", response_model=schemas.PostInResponse)
 def update_post(
     *,
     id: int,
@@ -62,22 +62,24 @@ def update_post(
     return post
 
 
-@router.get("/{id}", response_model=schemas.Post)
+@router.get("/{id}", response_model=schemas.PostInResponse)
 def read_post(
     *,
-    id: int
+    id: int,
+    current_user: models.User = Depends(
+        authentication.get_current_active_user)
 ) -> Any:
     """
     Get post by ID.
     """
     try:
-        post = post_services.get(id)
+        post = post_services.get(id=id, requested_user=current_user)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
 
 
-@router.delete("/{id}", response_model=schemas.Post)
+@router.delete("/{id}", response_model=schemas.PostInResponse)
 def delete_post(
     *,
     id: int,

@@ -29,6 +29,55 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
         return user
 
+    def get_profile_by_id(
+        self, *, id: int,
+        requested_user: Optional[Union[User, Profile]]
+    ) -> Optional[Union[User, Profile]]:
+
+        user = self.get(id)
+
+        profile = Profile(**user.__dict__)
+
+        if requested_user:
+            profile.following = self.is_user_following_for_another(
+                target_user=user,
+                requested_user=requested_user,
+            )
+        return profile
+
+    def get_profile_by_username(
+        self, *, username: str,
+        requested_user: Optional[Union[User, Profile]]
+    ) -> Optional[Union[User, Profile]]:
+        profile = None
+        user = self.get_by_username(username=username)
+        if user:
+            profile = Profile(**user.__dict__)
+
+        if requested_user:
+            profile.following = self.is_user_following_for_another(
+                target_user=user,
+                requested_user=requested_user,
+            )
+        return profile
+
+    def get_profile_by_email(
+        self, *, email: str,
+        requested_user: Optional[Union[User, Profile]]
+    ) -> Optional[Union[User, Profile]]:
+        profile = None
+        user = self.get_by_email(email=email)
+
+        if user:
+            profile = Profile(**user.__dict__)
+
+        if requested_user:
+            profile.following = self.repository.is_user_following_for_another(
+                target_user=user,
+                requested_user=requested_user,
+            )
+        return profile
+
     def create(self, *, body: Union[UserCreate, Dict[str, Any]]) -> User:
 
         if isinstance(body, dict):
