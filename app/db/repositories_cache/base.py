@@ -40,14 +40,16 @@ class RedisDecorator(
 
     def get(self, id: Any) -> Optional[ModelType]:
         cache_data = self._get_cache(id)
+
         if cache_data:
             obj = self.model(**cache_data)
         else:
             obj = self.crud_component.get(id)
 
-        self._set_cache(id, data=obj)
+        if obj:
+            self._set_cache(id, data=obj)
 
-        return obj
+            return obj
 
     def create(self, *, body: CreateSchemaType) -> ModelType:
         obj = self.crud_component.create(body=body)

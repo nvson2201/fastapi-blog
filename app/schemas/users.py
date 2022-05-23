@@ -83,7 +83,7 @@ class UserInDBBase(UserBase):
         orm_mode = True
 
 
-class User(UserInDBBase):  # response_model
+class UserInResponse(UserInDBBase):  # response_model
     pass
 
 
