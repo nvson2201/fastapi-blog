@@ -7,7 +7,7 @@ from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
 )
-from app.exceptions.users import (
+from app.services.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.schemas.datetime import DateTime
@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[schemas.UserInResponse])
 def read_users(
-    skip: int = 0,
+    offset: int = 0,
     limit: int = 100,
     date_start: DateTime = None,
     date_end: DateTime = None,
@@ -28,7 +28,7 @@ def read_users(
     Retrieve users by admin.
     """
     users = user_services.get_multi(
-        skip=skip, limit=limit,
+        offset=offset, limit=limit,
         date_start=date_start, date_end=date_end
     )
     return users

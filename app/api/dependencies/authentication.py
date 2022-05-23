@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 
 from app import models
 from app.config import settings
-from app.exceptions.users import (
+from app.services.exceptions.users import (
     UserNotFound, UserInvalidCredentials, UserInactive, UserNotSuper)
 from app.services.authentication import auth_services
 from app.services.users import user_services

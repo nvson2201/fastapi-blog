@@ -3,5 +3,6 @@
     "/Users/sonnguyen/PythonProject/fastapi-blog"
   ],
   "python.linting.enabled": true,
-  "python.linting.flake8Enabled": true
+  "python.linting.flake8Enabled": true,
+  "explorer.sortOrder": "type"
 }

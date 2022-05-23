@@ -2,7 +2,7 @@ from typing import Any, List
 
 from app.models.posts import Post
 from app.schemas.posts import PostCreate
-from app.decorators.component import (
+from app.db.repositories_cache.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.db.repositories_cache.base import RedisDecorator
 from app.db import repositories
@@ -26,11 +26,11 @@ class PostRedisRepository(
         return post
 
     def get_multi_by_owner(
-        self, *, author_id: int, skip: int = 0, limit: int = 100,
+        self, *, author_id: int, offset: int = 0, limit: int = 100,
     ) -> List[Post]:
 
         return self.crud_component.get_multi_by_owner(
-            author_id=author_id, skip=skip, limit=limit,
+            author_id=author_id, offset=offset, limit=limit,
         )
 
     def update_views(self, id: Any):

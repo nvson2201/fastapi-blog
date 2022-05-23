@@ -3,7 +3,7 @@ from pydantic import ValidationError
 
 from app.config import settings
 from app.models.users import User
-from app.exceptions.users import UserNotFound, UserInvalidCredentials
+from app.services.exceptions.users import UserNotFound, UserInvalidCredentials
 
 from app.db.repositories_cache.users import UserRedisRepository
 from app.utils import security

@@ -1,4 +1,4 @@
-from app.decorators.component import (
+from app.db.repositories_cache.decorators.component import (
     ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 

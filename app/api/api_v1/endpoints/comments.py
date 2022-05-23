@@ -13,7 +13,7 @@ router = APIRouter()
 @router.get("/", response_model=List[schemas.Comment])
 def read_comments(
     post_id: int,
-    skip: int = 0,
+    offset: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
@@ -22,10 +22,10 @@ def read_comments(
     Retrieve comments.
     """
     if repositories.users.is_superuser(current_user):
-        comments = repositories.comment.get_multi(skip=skip, limit=limit)
+        comments = repositories.comment.get_multi(offset=offset, limit=limit)
     else:
         comments = repositories.comment.get_multi_by_owner(
-            author_id=current_user.id, skip=skip,
+            author_id=current_user.id, offset=offset,
             limit=limit, post_id=post_id
         )
     return comments
