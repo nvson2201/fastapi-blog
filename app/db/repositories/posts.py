@@ -84,9 +84,9 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         for tag_id in tag_ids:
             q = self.db.query(Tag)
             tag = q.filter(Tag.id == tag_id).first()
-            tags_list.append(tag.id)
+            tags_list.append(tag.tag)
 
-        return set(tags_list)
+        return list(set(tags_list))
 
     def update_new_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
         self.db.query(PostsToTags).filter(

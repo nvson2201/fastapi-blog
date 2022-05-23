@@ -55,8 +55,8 @@ def get_tags(user_id):
 
 @click.command()
 @click.option('--post_id', prompt='post_id')
-@click.option('--tags', prompt='tags', multiple=True, default=["chuoi", "qua"])
-def add_tag_to_post_id(post_id, tags):
+@click.option('--tags', prompt='tags', multiple=True, default=["cam", "quyt"])
+def update_new_tags_to_post_by_id(post_id, tags):
     posts.update_new_tags_to_post_by_id(id=post_id, tags=tags)
 
 
@@ -97,12 +97,20 @@ def delete_post_from_favorites(post_id, user_id):
     print(user1.id, post_at_id.id)
 
 
+@click.command()
+@click.option('--post_id', prompt='post_id')
+def get_tags_for_post_by_id(post_id):
+    tags = posts.get_tags_for_post_by_id(id=post_id)
+    print(tags)
+
+
 if __name__ == '__main__':
     # read_user_by_id()
     # add_tags()
     # get_tags()
-    # add_tag_to_post_id()
+    update_new_tags_to_post_by_id()
     # get_favorites_count_for_post_by_id()
     # is_post_favorited_by_user()
     # add_post_into_favorites()
-    delete_post_from_favorites()
+    # delete_post_from_favorites()
+    # get_tags_for_post_by_id()

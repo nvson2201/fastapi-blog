@@ -65,13 +65,15 @@ def update_post(
 @router.get("/{id}", response_model=schemas.PostInResponse)
 def read_post(
     *,
-    id: int
+    id: int,
+    current_user: models.User = Depends(
+        authentication.get_current_active_user)
 ) -> Any:
     """
     Get post by ID.
     """
     try:
-        post = post_services.get(id)
+        post = post_services.get(id=id, requested_user=current_user)
     except PostNotFound:
         raise HTTPException(status_code=404, detail="Post not found")
     return post

@@ -2,12 +2,13 @@ from typing import Optional, List
 from datetime import datetime
 
 from pydantic import BaseModel, Field
+from app.schemas.profiles import Profile
 
 
 class PostBase(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
-    author: Optional[int] = None
+    author: Optional[Profile] = None
     tags: Optional[List[str]] = None
     favorited: Optional[bool] = None
     favorites_count: Optional[int] = None

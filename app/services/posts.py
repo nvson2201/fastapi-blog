@@ -4,7 +4,7 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.models.posts import Post
-from app.schemas.posts import PostUpdate, PostCreate
+from app.schemas.posts import PostUpdate, PostCreate, PostInResponse
 from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
@@ -14,6 +14,7 @@ from app.decorators.component import ModelType
 from app.db import repositories
 from app.db import db
 from app.decorators.component import ComponentRepository
+from app.models import User
 
 
 class PostServices(PostRedisRepository):
@@ -29,12 +30,33 @@ class PostServices(PostRedisRepository):
         self.repository = repository
         super().__init__(model, db, _crud_component, prefix)
 
-    def get(self, id: str):
-        post = self.repository.get(id)
-        if not post:
+    def get(self, *, id: str, requested_user: User) -> PostInResponse:
+        post_record = self.repository.get(id)
+
+        if not post_record:
             raise PostNotFound
 
-        producer.produce({'id': post.id})
+        producer.produce({'id': post_record.id})
+
+        author = repositories.users.get_profile_by_id(
+            id=post_record.id, requested_user=requested_user)
+
+        tagList = self.repository.get_tags_for_post_by_id(id=post_record.id)
+        print(tagList)
+        favorited = self.repository.is_post_favorited_by_user(
+            post=post_record, user=requested_user
+        )
+        favorites_count = self.repository.get_favorites_count_for_post_by_id(
+            id=post_record.id)
+
+        post = PostInResponse(
+            title=post_record.title,
+            body=post_record.body,
+            author=author,
+            tagList=tagList,
+            favorited=favorited,
+            favorites_count=favorites_count
+        )
 
         return post
 
