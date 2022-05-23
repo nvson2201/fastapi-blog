@@ -4,7 +4,10 @@ from sqlalchemy import exc
 from sqlalchemy.orm import Session
 
 from app.models.posts import Post
-from app.schemas.posts import PostUpdate, PostCreate, PostInResponse
+from app.schemas.posts import (
+    PostUpdate, PostCreate,
+    PostInResponse, ListOfPostsInResponse
+)
 from app.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
@@ -15,6 +18,7 @@ from app.db import repositories
 from app.db import db
 from app.decorators.component import ComponentRepository
 from app.models import User
+from app.exceptions.favorites import PostAlreadyFavoried, PostStillNotFavorited
 
 
 class PostServices(PostRedisRepository):
@@ -42,7 +46,7 @@ class PostServices(PostRedisRepository):
             id=post_record.id, requested_user=requested_user)
 
         tagList = self.repository.get_tags_for_post_by_id(id=post_record.id)
-        print(tagList)
+
         favorited = self.repository.is_post_favorited_by_user(
             post=post_record, user=requested_user
         )
@@ -50,6 +54,7 @@ class PostServices(PostRedisRepository):
             id=post_record.id)
 
         post = PostInResponse(
+            id=post_record.id,
             title=post_record.title,
             body=post_record.body,
             author=author,
@@ -81,12 +86,12 @@ class PostServices(PostRedisRepository):
         return post
 
     def get_multi_by_owner(
-        self, author_id: int, skip: int = 0, limit: int = 100,
+        self, author_id: int, offset: int = 0, limit: int = 100,
     ) -> List[Post]:
 
         posts = self.repository.get_multi_by_owner(
             author_id=author_id,
-            skip=skip, limit=limit,
+            offset=offset, limit=limit,
         )
 
         return posts
@@ -96,6 +101,59 @@ class PostServices(PostRedisRepository):
 
     def update_views(self, id: int):
         self.repository.update_views(id)
+
+    def mark_post_as_favorite(
+        self, *, id: int, user: User
+    ) -> PostInResponse:
+        post = self.get(id=id, requested_user=user)
+        print(post)
+        if not post:
+            raise PostNotFound
+
+        if self.repository.is_post_favorited_by_user(post=post, user=user):
+            raise PostAlreadyFavoried
+
+        self.repository.add_post_into_favorites(post=post, user=user)
+        post.favorites_count += 1
+
+        return post
+
+    def remove_post_from_favorites(
+        self, *, id: int, user: User
+    ) -> PostInResponse:
+        post = self.get(id=id, requested_user=user)
+
+        if not post:
+            raise PostNotFound
+
+        if not self.repository.is_post_favorited_by_user(post=post, user=user):
+            raise PostStillNotFavorited
+
+        self.repository.delete_post_from_favorites(post=post, user=user)
+        post.favorites_count -= 1
+
+        return post
+
+    def get_posts_for_user_feed(
+        self,
+        *,
+        user: User,
+        limit: int = 20,
+        offset: int = 0
+    ) -> ListOfPostsInResponse:
+        print("user ID: ", user.id)
+        posts_in_db = self.repository.get_posts_for_feed(
+            user=user, limit=limit, offset=offset
+        )
+        print(posts_in_db)
+        posts = [
+            self.get(id=post.id, requested_user=user)
+            for post in posts_in_db
+        ]
+        return ListOfPostsInResponse(
+            posts=posts,
+            posts_count=len(posts),
+        )
 
 
 post_services = PostServices(
