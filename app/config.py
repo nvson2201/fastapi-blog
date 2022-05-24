@@ -11,10 +11,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     EXPEIRATION_TIME_CACHE: int = 60 * 24 * 5
 
+    REDIS_HOST = "localhost"
+    REDIS_PORT = "6379"
+    REDIS_PASSWORD = "123456"
     REDIS_PREFIX_USER = "user_id"
     REDIS_PREFIX_POST = "post_id"
     REDIS_PREFIX_COMMENT = "comment_id"
-    REDIS_PREFIX_POST_VIEWS = "post_views"
 
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore

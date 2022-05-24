@@ -2,23 +2,25 @@ from typing import List, Type
 
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
-
+from fastapi.encoders import jsonable_encoder
 from app.models.posts import Post
 from app.schemas.posts import (
     PostUpdate, PostCreate,
-    PostInResponse, ListOfPostsInResponse
+    PostInResponse, ListOfPostsInResponse,
+    PostInDBCreate
 )
-from app.exceptions.posts import PostNotFound, PostDuplicate
+from app.services.exceptions.posts import PostNotFound, PostDuplicate
 from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
 from app.db import repositories_cache
 from app.config import settings
-from app.decorators.component import ModelType
+from app.db.repositories_cache.decorators.component import ModelType
 from app.db import repositories
 from app.db import db
-from app.decorators.component import ComponentRepository
+from app.db.repositories_cache.decorators.component import ComponentRepository
 from app.models import User
-from app.exceptions.favorites import PostAlreadyFavoried, PostStillNotFavorited
+from app.services.exceptions.favorites import (
+    PostAlreadyFavoried, PostStillNotFavorited)
 
 
 class PostServices(PostRedisRepository):
@@ -43,7 +45,7 @@ class PostServices(PostRedisRepository):
         producer.produce({'id': post_record.id})
 
         author = repositories.users.get_profile_by_id(
-            id=post_record.id, requested_user=requested_user)
+            id=post_record.author_id, requested_user=requested_user)
 
         tagList = self.repository.get_tags_for_post_by_id(id=post_record.id)
 
@@ -54,9 +56,7 @@ class PostServices(PostRedisRepository):
             id=post_record.id)
 
         post = PostInResponse(
-            id=post_record.id,
-            title=post_record.title,
-            body=post_record.body,
+            **jsonable_encoder(post_record),
             author=author,
             tagList=tagList,
             favorited=favorited,
@@ -79,9 +79,16 @@ class PostServices(PostRedisRepository):
         return post
 
     def create_with_owner(self, body: PostCreate, author_id: int):
+        body = jsonable_encoder(body)
+        post_in_db_create = PostInDBCreate(**body, author_id=author_id)
+        post_record = self.repository.create(body=post_in_db_create)
 
-        post = self.repository.create_with_owner(
-            body=body, author_id=author_id)
+        self.repository.update_new_tags_to_post_by_id(
+            id=post_record.id, tags=body['tagList'])
+
+        author = repositories.users.get(author_id)
+
+        post = self.get(id=post_record.id, requested_user=author)
 
         return post
 
@@ -106,7 +113,7 @@ class PostServices(PostRedisRepository):
         self, *, id: int, user: User
     ) -> PostInResponse:
         post = self.get(id=id, requested_user=user)
-        print(post)
+
         if not post:
             raise PostNotFound
 
@@ -141,15 +148,16 @@ class PostServices(PostRedisRepository):
         limit: int = 20,
         offset: int = 0
     ) -> ListOfPostsInResponse:
-        print("user ID: ", user.id)
+
         posts_in_db = self.repository.get_posts_for_feed(
             user=user, limit=limit, offset=offset
         )
-        print(posts_in_db)
+
         posts = [
             self.get(id=post.id, requested_user=user)
             for post in posts_in_db
         ]
+
         return ListOfPostsInResponse(
             posts=posts,
             posts_count=len(posts),

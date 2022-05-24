@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Type, Union
 
 from sqlalchemy.orm import Session
 
-from app.decorators.component import (
+from app.db.repositories_cache.decorators.component import (
     ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
@@ -22,10 +22,10 @@ class BaseRepository(
         return obj
 
     def get_multi(
-        self, *, skip: int = 0, limit: int = 100
+        self, *, offset: int = 0, limit: int = 100
     ) -> List[ModelType]:
         q = self.db.query(self.model)
-        q = q.offset(skip)
+        q = q.offset(offset)
         q = q.limit(limit)
         objs = q.all()
 

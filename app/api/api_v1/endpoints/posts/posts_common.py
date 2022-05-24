@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from app import models, schemas
 from app.api.dependencies import authentication
 from app.services.posts import post_services
-from app.exceptions.favorites import PostStillNotFavorited, PostAlreadyFavoried
+from app.services.exceptions.favorites import (
+    PostStillNotFavorited, PostAlreadyFavoried)
 
 router = APIRouter()
 

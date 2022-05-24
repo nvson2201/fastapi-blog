@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.users import User
 from app.schemas import UserUpdate, UserCreate, Profile, ProfileInResponse
-from app.exceptions.users import (
+from app.services.exceptions.users import (
     UserNotFound, UserDuplicate,
     UserInactive, UserNotSuper, UserForbiddenRegiser)
-from app.exceptions.profile import (
+from app.services.exceptions.profile import (
     UnableToFollowYourself, UserIsAlreadyFollowed,
     UserIsNotFollowed, UnableToUnsubcribeFromYourself
 )
@@ -18,10 +18,10 @@ from app.utils.mail import send_new_account_email
 from app.db.repositories_cache.users import UserRedisRepository
 from app.schemas.datetime import DateTime
 from app.db import repositories_cache
-from app.decorators.component import ModelType
+from app.db.repositories_cache.decorators.component import ModelType
 from app.db import repositories
 from app.db import db
-from app.decorators.component import ComponentRepository
+from app.db.repositories_cache.decorators.component import ComponentRepository
 
 
 class UserServices(UserRedisRepository):
@@ -129,13 +129,13 @@ class UserServices(UserRedisRepository):
         return user
 
     def get_multi(
-        self, skip: int = 0, limit: int = 100,
+        self, offset: int = 0, limit: int = 100,
         date_start: DateTime = None,
         date_end: DateTime = None,
     ) -> List[User]:
 
         users = self.repository.get_multi(
-            skip=skip, limit=limit,
+            offset=offset, limit=limit,
             date_start=date_start,
             date_end=date_end
         )

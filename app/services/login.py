@@ -4,11 +4,11 @@ from datetime import timedelta
 from app import schemas
 from app.config import settings
 
-from app.exceptions.users import (
+from app.services.exceptions.users import (
     UserNotFound,
     UserInactive,
     UserIncorrectCredentials)
-from app.exceptions.tokens import InvalidToken
+from app.services.exceptions.tokens import InvalidToken
 from app.db.repositories_cache.users import UserRedisRepository
 from app.utils import security
 from app.utils.mail import (

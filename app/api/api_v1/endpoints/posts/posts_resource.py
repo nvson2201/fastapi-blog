@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from app import models, schemas
 from app.db import repositories
 from app.api.dependencies import authentication
-from app.exceptions.posts import PostNotFound
+from app.services.exceptions.posts import PostNotFound
 from app.services.posts import post_services
 
 router = APIRouter()
@@ -14,14 +14,14 @@ router = APIRouter()
 @router.get("/", response_model=List[schemas.PostInResponse])
 def read_posts(
     author_id: int,
-    skip: int = 0,
+    offset: int = 0,
     limit: int = 100
 ) -> Any:
     """
     Retrieve posts.
     """
     posts = post_services.get_multi_by_owner(
-        author_id=author_id, skip=skip, limit=limit
+        author_id=author_id, offset=offset, limit=limit
     )
     return posts
 
