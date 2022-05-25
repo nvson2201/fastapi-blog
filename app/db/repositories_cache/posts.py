@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from app.models.posts import Post
+
 from app.schemas.posts import PostInDBCreate
 from app.db.repositories_cache.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
