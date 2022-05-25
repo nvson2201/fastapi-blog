@@ -34,7 +34,7 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         requested_user: Optional[Union[User, Profile]]
     ) -> Optional[Union[User, Profile]]:
 
-        user = self.get(id)
+        user = self.get(requested_user.id)
 
         profile = Profile(**user.__dict__)
 

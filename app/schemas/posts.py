@@ -12,6 +12,11 @@ class PostUpdate(BaseModel):
     tags: Optional[List[str]] = Field([], alias="tagList")
 
 
+class ListOfPostsInResponse(BaseModel):
+    posts: Optional[List[PostInResponse]] = None
+    posts_count: Optional[int] = None
+
+
 class PostCreate(BaseModel):
     title: str
     body: str
@@ -55,3 +60,5 @@ class PostUpdateView(BaseModel):
 
     class Config:
         orm_mode = True
+
+
