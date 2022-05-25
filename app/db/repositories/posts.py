@@ -1,11 +1,13 @@
-from typing import List, Any, Union, Dict
+from typing import List, Any, Optional
 
 from sqlalchemy import desc
 from sqlalchemy import exc
 from app.db.repositories.base import BaseRepository
 from app.models.posts import Post
 from app.models import PostsToTags, Tag, Favorite, User
-from app.schemas.posts import PostCreate, PostUpdate, PostInDB, PostInDBCreate
+from app.schemas.posts import (
+    PostCreate, PostUpdate,
+    PostInDB, PostInDBCreate, PostInDBUpdate)
 from app.config import settings
 from app.db import db
 from app.db.repositories.tags import TagRepository
@@ -48,7 +50,7 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
     def update(
         self,
-        post: Post, *, body: Union[PostUpdate, Dict[str, Any]]
+        post: Post, *, body: PostInDBUpdate
     ) -> Post:
         if isinstance(body, dict):
             body_dict = body
@@ -61,7 +63,6 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             updated_at=updated_at,
             **body_dict
         )
-
         return super().update(post, body=update_data)
 
     def update_views(self, id: Any):
@@ -87,13 +88,12 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
         return list(set(tags_list))
 
-    def update_new_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
-        self.db.query(PostsToTags).filter(
-            PostsToTags.post_id == id).delete()
-        self.db.commit()
+    def link_new_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
 
-        tags = self._tag_repo.create_tags_that_dont_exist(body=tags)
+        tags = list(set(tags))
+        self._tag_repo.create_tags_that_dont_exist(body=tags)
         for tag in tags:
+            tag = self.db.query(Tag).filter(Tag.tag == tag).first()
             post_to_tag = PostsToTags(post_id=id, tag_id=tag.id)
 
             try:
@@ -103,6 +103,15 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
                 raise Exception("No post with this id")
 
             self.db.refresh(post_to_tag)
+
+    def remove_link_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
+        tags = list(set(tags))
+        q = self.db.query(PostsToTags)
+        q = q.filter(PostsToTags.post_id == id)
+        q = q.where(PostsToTags.tag)
+        q = q.filter(Tag.tag.in_(tags))
+        q = q.delete(synchronize_session='fetch')
+        self.db.commit()
 
     def get_favorites_count_for_post_by_id(
             self, *, id
@@ -158,6 +167,38 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         q = q.order_by(desc(Post.created_at))
         q = q.limit(limit)
         posts = q.offset(offset)
+
+        return posts
+
+    def posts_filters(
+        self,
+        *,
+        tags: List[str] = None,
+        author: Optional[str] = None,
+        user_favorited: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+        requested_user: Optional[User] = None,
+    ) -> List[Post]:
+        if tags:
+            q = self.db.query(Post).distinct()
+            q = q.where(Post.posts_to_tags)
+            q = q.filter(PostsToTags.tag.has(Tag.tag.in_(tags)))
+
+        if author:
+            q = q.where(User.posts)
+            q = q.filter(Post.author.has(User.username == author))
+
+        if user_favorited:
+            q = q.where(Post.favorites)
+            q = q.filter(Favorite.user.has(
+                User.username == user_favorited)
+            )
+
+        q = q.limit(limit)
+        q = q.offset(offset)
+
+        posts = q.all()
 
         return posts
 

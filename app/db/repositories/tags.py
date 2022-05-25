@@ -17,6 +17,9 @@ class TagRepository(BaseRepository):
     ) -> None:
         tags = []
         for tag in body:
+            tag_in_db = self.db.query(Tag).filter(Tag.tag == tag).first()
+            if tag_in_db:
+                continue
             body_dict = {"tag": tag}
             tag = self.model(**body_dict)
             self.db.add(tag)
