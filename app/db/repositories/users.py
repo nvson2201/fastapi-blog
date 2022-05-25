@@ -8,12 +8,14 @@ from app.models.users import User
 from app.models.followers_to_followings import FollowersToFollowings
 from app.services.exceptions.profile import UserIsNotFollowed
 from app.db.repositories.base import BaseRepository
-from app.utils.security import get_password_hash, verify_password
+from app.utils.security import get_password_hash
 from app.config import settings
-from app.db import db
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
+
+    def __init__(self, db):
+        super().__init__(User, db)
 
     def get_by_email(self, *, email: str) -> Optional[User]:
         q = self.db.query(User)
@@ -28,57 +30,6 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         user = q.first()
 
         return user
-
-    def get_profile_by_id(
-        self, *, id: int,
-        requested_user: Optional[Union[User, Profile]]
-    ) -> Optional[Union[User, Profile]]:
-
-        user = self.get(id)
-
-        profile = Profile(**user.__dict__)
-
-        if requested_user:
-            profile.following = self.is_user_following_for_another(
-                target_user=user,
-                requested_user=requested_user,
-            )
-        return profile
-
-    def get_profile_by_username(
-        self, *, username: str,
-        requested_user: Optional[Union[User, Profile]]
-    ) -> Optional[Union[User, Profile]]:
-        user = self.get_by_username(username=username)
-
-        if not user:
-            return None
-
-        profile = Profile(**user.__dict__)
-
-        if requested_user:
-            profile.following = self.is_user_following_for_another(
-                target_user=user,
-                requested_user=requested_user,
-            )
-        return profile
-
-    def get_profile_by_email(
-        self, *, email: str,
-        requested_user: Optional[Union[User, Profile]]
-    ) -> Optional[Union[User, Profile]]:
-        profile = None
-        user = self.get_by_email(email=email)
-
-        if user:
-            profile = Profile(**user.__dict__)
-
-        if requested_user:
-            profile.following = self.repository.is_user_following_for_another(
-                target_user=user,
-                requested_user=requested_user,
-            )
-        return profile
 
     def create(self, *, body: Union[UserCreate, Dict[str, Any]]) -> User:
 
@@ -123,28 +74,13 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
         return super().update(user, body=update_data)
 
-    def authenticate(self, *,
-                     email: str, password: str) -> Optional[User]:
-        user = self.get_by_email(email=email)
-        if not user:
-            return None
-        if not verify_password(password, user.hashed_password):
-            return None
-        return user
-
-    def is_active(self, user: User) -> bool:
-        return user.is_active
-
-    def is_superuser(self, user: User) -> bool:
-        return user.is_superuser
-
     def get_multi(
         self, *, offset: int = 0, limit: int = 100,
         date_start: DateTime = None,
         date_end: DateTime = None,
     ) -> List[User]:
 
-        q = self.db.query(self.model)
+        q = self.db.query(User)
 
         if date_start is None:
             date_start = DateTime(datetime=settings.past_week())
@@ -223,10 +159,12 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         q = self.db.query(User)
 
         requested_user = q.filter(
-            User.username == requested_user.username).first()
+            User.username == requested_user.username
+        ).first()
 
         target_user = q.filter(
-            User.username == target_user.username).first()
+            User.username == target_user.username
+        ).first()
 
         q = self.db.query(FollowersToFollowings)
 
@@ -244,5 +182,27 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         self.db.delete(followers_to_followings_record)
         self.db.commit()
 
+    def is_active(self, user: User) -> bool:
+        return user.is_active
 
-users = UserRepository(User, db)
+    def is_superuser(self, user: User) -> bool:
+        return user.is_superuser
+
+    def get_profile_by_id(
+        self, *, id: int,
+        requested_user: Optional[Union[User, Profile]]
+    ) -> Optional[Union[User, Profile]]:
+
+        user = self.get(id)
+
+        if not user:
+            return None
+
+        profile = Profile(**user.__dict__)
+
+        if requested_user:
+            profile.following = self.repository.is_user_following_for_another(
+                target_user=user,
+                requested_user=requested_user,
+            )
+        return profile

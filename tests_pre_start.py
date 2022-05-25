@@ -3,7 +3,7 @@ import logging
 from tenacity import (after_log, before_log, retry,
                       stop_after_attempt, wait_fixed)
 
-from app.plugins.mysql.session import SessionLocal
+from app.tests.utils.database import TestingSessionLocal
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ wait_seconds = 1
 def init() -> None:
     try:
         # Try to create session to check if DB is awake
-        db = SessionLocal()
+        db = TestingSessionLocal()
         db.execute("SELECT 1")
     except Exception as e:
         logger.error(e)

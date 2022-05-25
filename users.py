@@ -12,7 +12,6 @@ class UserRedisRepository(
     RedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType],
     UserRepository
 ):
-
     def __init__(self, db, _crud_component: UserRepository):
         RedisDecorator.__init__(self, _crud_component,
                                 settings.REDIS_PREFIX_USER)

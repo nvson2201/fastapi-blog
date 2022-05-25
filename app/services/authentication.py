@@ -19,7 +19,8 @@ class AuthenticationService:
     def get_current_user(self, token: str) -> User:
         try:
             payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+                token, settings.SECRET_KEY,
+                algorithms=[security.ALGORITHM]
             )
             token_data = TokenPayload(**payload)
 
@@ -27,7 +28,6 @@ class AuthenticationService:
             raise UserInvalidCredentials
 
         user = self.repository.get(id=token_data.sub)
-
         if not user:
             raise UserNotFound
 

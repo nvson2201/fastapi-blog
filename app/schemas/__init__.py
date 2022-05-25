@@ -1,7 +1,8 @@
 from .users import (UserInResponse, UserCreate,  # noqa
                     UserInDB, UserUpdate, UserPassword)
 from .posts import (ListOfPostsInResponse, PostInResponse,  # noqa
-                    PostCreate, PostInDB, PostUpdate)
+                    PostCreate, PostInDB, PostUpdate,
+                    PostsFilters, PostInDBUpdate, PostInDBCreate)
 from .comments import Comment, CommentCreate, CommentInDB, CommentUpdate  # noqa
 from .msgs import Msg  # noqa
 from .tokens import Token, TokenPayload  # noqa

@@ -5,19 +5,21 @@ from fastapi.encoders import jsonable_encoder
 from app.db.repositories.base import BaseRepository
 from app.models.comments import Comment
 from app.schemas.comments import CommentCreate, CommentUpdate
-from app.db import db
 
 
 class CommentRepository(
         BaseRepository[Comment, CommentCreate, CommentUpdate]
 ):
+    def __init__(self, db):
+        super().__init__(Comment, db)
+
     def create_with_owner(
         self, *, body: CommentCreate,
         author_id: int, post_id: int
     ) -> Comment:
         body_dict = jsonable_encoder(body)
-        comment = self.model(**body_dict, author_id=author_id,
-                             post_id=post_id)
+        comment = Comment(**body_dict, author_id=author_id,
+                          post_id=post_id)
         self.db.add(comment)
         self.db.commit()
         self.db.refresh(comment)
@@ -28,7 +30,7 @@ class CommentRepository(
         offset: int = 0, limit: int = 100
     ) -> List[Comment]:
 
-        q = self.db.query(self.model)
+        q = self.db.query(Comment)
         q = q.filter(Comment.author_id == author_id,
                      Comment.post_id == post_id)
         q = q.limit(limit)
@@ -37,6 +39,3 @@ class CommentRepository(
         comments = q.all()
 
         return comments
-
-
-comments = CommentRepository(Comment, db)

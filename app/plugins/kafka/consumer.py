@@ -1,6 +1,5 @@
 from confluent_kafka import Consumer, KafkaException
 import json
-from app.config import settings
 
 
 class KafkaConsumer():
@@ -22,9 +21,3 @@ class KafkaConsumer():
                 back_ground_job(msg)
 
         self.consumer.close()
-
-
-consumer = KafkaConsumer(Consumer(
-    settings.KAFKA_CONSUMER_CONFIG),
-    settings.KAFKA_TOPIC_POST_VIEWS
-)

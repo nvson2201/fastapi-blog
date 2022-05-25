@@ -7,9 +7,10 @@ from app.api.dependencies.authentication import (
 from app.services.exceptions.users import UserNotFound
 from app.services.exceptions.profile import (
     UnableToFollowYourself, UserIsAlreadyFollowed,
-    UserIsNotFollowed, UnableToUnsubcribeFromYourself)
+    UserIsNotFollowed, UnableToUnsubcribeFromYourself
+)
 
-from app.services.users import user_services
+from app.services.profiles import profile_services
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def get_profile_by_username(
     Get a specific user by id.
     """
     try:
-        profile = user_services.get_profile_by_username(
+        profile = profile_services.get_profile_by_username(
             username=username,
             requested_user=current_user
         )
@@ -42,7 +43,7 @@ def follow_for_user(
     current_user: models.User = Depends(get_current_active_user)
 ) -> schemas.ProfileInResponse:
     try:
-        profile = user_services.follow_for_user(
+        profile = profile_services.follow_for_user(
             username=username, requested_user=current_user)
 
     except UnableToFollowYourself:
@@ -71,7 +72,7 @@ def unsubscribe_from_user(
     current_user: models.User = Depends(get_current_active_user)
 ) -> schemas.ProfileInResponse:
     try:
-        profile = user_services.unsubscribe_from_user(
+        profile = profile_services.unsubscribe_from_user(
             username=username, requested_user=current_user)
     except UserNotFound:
         raise HTTPException(

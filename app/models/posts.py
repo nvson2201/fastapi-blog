@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .comments import Comment  # noqa: F401
     from .posts_to_tags import PostsToTags  # noqa: F401
     from .favorites import Favorite  # noqa: F401
+    from .notifications import Notification  # noqa: F401
 
 
 class Post(Base):
@@ -31,6 +32,9 @@ class Post(Base):
 
     favorites = relationship(
         "Favorite", back_populates="post", cascade="all,delete")
+
+    notifications = relationship(
+        "Notification", back_populates="post", cascade="all,delete")
 
     def __repr__(self):
         return f"{self.title}"

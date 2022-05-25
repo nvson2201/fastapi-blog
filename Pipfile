@@ -60,3 +60,7 @@ pytest = "*"
 
 [requires]
 python_version = "3.8"
+
+
+[scripts]
+app = "uvicorn --log-level info app.main:app --reload"
