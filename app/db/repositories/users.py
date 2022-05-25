@@ -49,10 +49,12 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         self, *, username: str,
         requested_user: Optional[Union[User, Profile]]
     ) -> Optional[Union[User, Profile]]:
-        profile = None
         user = self.get_by_username(username=username)
-        if user:
-            profile = Profile(**user.__dict__)
+
+        if not user:
+            return None
+
+        profile = Profile(**user.__dict__)
 
         if requested_user:
             profile.following = self.is_user_following_for_another(

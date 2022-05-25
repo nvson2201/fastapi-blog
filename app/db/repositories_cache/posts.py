@@ -1,7 +1,8 @@
 from typing import Any, List
 
 from app.models.posts import Post
-from app.schemas.posts import PostCreate
+
+from app.schemas.posts import PostInDBCreate
 from app.db.repositories_cache.decorators.component import (
     ModelType, CreateSchemaType, UpdateSchemaType)
 from app.db.repositories_cache.base import RedisDecorator
@@ -15,12 +16,14 @@ class PostRedisRepository(
     RedisDecorator[ModelType, CreateSchemaType, UpdateSchemaType],
     PostRepository
 ):
+    def __init__(
+            self, model, db,
+            _crud_component: PostRepository, prefix: str):
+        RedisDecorator.__init__(self, model, db, _crud_component, prefix)
+        PostRepository.__init__(self, model, db)
 
-    def create_with_owner(self,
-                          body: PostCreate, author_id: int):
-        post = self.crud_component.create_with_owner(
-            body=body, author_id=author_id)
-
+    def create(self, *, body: PostInDBCreate) -> Post:
+        post = self.crud_component.create(body=body)
         self._set_cache(id=post.id, data=post)
 
         return post
