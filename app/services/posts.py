@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import Type, Optional
 
 from sqlalchemy import exc
 from sqlalchemy.orm import Session
@@ -14,10 +14,10 @@ from app.db.repositories_cache.posts import PostRedisRepository
 from app.plugins.kafka import producer
 from app.db import repositories_cache
 from app.config import settings
-from app.db.repositories_cache.decorators.component import ModelType
+from app.decorators.component import ModelType
 from app.db import repositories
 from app.db import db
-from app.db.repositories_cache.decorators.component import ComponentRepository
+from app.decorators.component import ComponentRepository
 from app.models import User
 from app.services.exceptions.favorites import (
     PostAlreadyFavoried, PostStillNotFavorited)
@@ -65,25 +65,35 @@ class PostServices(PostRedisRepository):
 
         return post
 
-    def update(self, id: str, body: PostUpdate):
-        post = self.repository.get(id)
+    def update(self, *, id: str, body: PostUpdate, requested_user: User):
 
-        if not post:
+        post_in_db = self.repository.get(id)
+        if not post_in_db:
             raise PostNotFound
-
         try:
-            post = self.repository.update(self.post, body=body)
+            self.repository.update(post_in_db, body=body)
         except exc.IntegrityError:
             raise PostDuplicate
 
-        return post
+        old_tags = list(
+            set(self.repository.get_tags_for_post_by_id(id=id)) -
+            set(body.tags)
+        )
+
+        new_tags = list(set(body.tags) - set(old_tags))
+
+        self.remove_link_tags_to_post_by_id(id=id, tags=old_tags)
+        self.link_new_tags_to_post_by_id(id=id, tags=new_tags)
+
+        post_in_response = self.get(id=id, requested_user=requested_user)
+        return post_in_response
 
     def create_with_owner(self, body: PostCreate, author_id: int):
         body = jsonable_encoder(body)
         post_in_db_create = PostInDBCreate(**body, author_id=author_id)
         post_record = self.repository.create(body=post_in_db_create)
 
-        self.repository.update_new_tags_to_post_by_id(
+        self.repository.link_new_tags_to_post_by_id(
             id=post_record.id, tags=body['tagList'])
 
         author = repositories.users.get(author_id)
@@ -92,19 +102,42 @@ class PostServices(PostRedisRepository):
 
         return post
 
-    def get_multi_by_owner(
-        self, author_id: int, offset: int = 0, limit: int = 100,
-    ) -> List[Post]:
+    def posts_filters(
+        self,
+        *,
+        tags: Optional[str] = None,
+        author: Optional[str] = None,
+        user_favorited: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+        requested_user: Optional[User] = None,
+    ) -> ListOfPostsInResponse:
 
-        posts = self.repository.get_multi_by_owner(
-            author_id=author_id,
-            offset=offset, limit=limit,
+        tags = tags.split(",")
+        tags = [tag.strip() for tag in tags]
+
+        posts_in_db = self.repository.posts_filters(
+            tags=tags,
+            author=author,
+            user_favorited=user_favorited,
+            limit=limit,
+            offset=offset,
+            requested_user=requested_user
+        )
+        posts = [
+            self.get(id=post.id, requested_user=requested_user)
+            for post in posts_in_db
+        ]
+
+        return ListOfPostsInResponse(
+            posts=posts,
+            posts_count=len(posts),
         )
 
-        return posts
-
-    def remove(self, id: int):
-        return self.repository.remove(id)
+    def remove(self, *, id: int, requested_user: User):
+        post = self.get(id=id, requested_user=requested_user)
+        self.repository.remove(id=id)
+        return post
 
     def update_views(self, id: int):
         self.repository.update_views(id)
