@@ -6,9 +6,9 @@ from app import models, schemas
 from app.db import repositories
 from app.api.dependencies import authentication
 from app.services.exceptions.posts import PostNotFound
-from app.services.posts import post_services
 from app.api.dependencies.posts import get_post_filters
 from app.schemas import PostsFilters, ListOfPostsInResponse
+from app.services.posts import PostServices
 
 router = APIRouter()
 
@@ -16,7 +16,9 @@ router = APIRouter()
 @router.get("", response_model=ListOfPostsInResponse)
 def read_posts(
     posts_filters: PostsFilters = Depends(get_post_filters),
-    current_user: models.User = Depends(authentication.get_current_active_user)
+    current_user: models.User = Depends(
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> ListOfPostsInResponse:
     return post_services.posts_filters(
         tags=posts_filters.tags,
@@ -33,7 +35,8 @@ def create_post(
     *,
     body: schemas.PostCreate,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> Any:
     """
     Create new post.
@@ -49,7 +52,8 @@ def update_post(
     id: int,
     body: schemas.PostUpdate,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> Any:
     """
     Update an post.
@@ -69,7 +73,8 @@ def read_post_by_id(
     *,
     id: int,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> Any:
     """
     Get post by ID.
@@ -86,7 +91,8 @@ def delete_post(
     *,
     id: int,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> Any:
     """
     Delete an post.

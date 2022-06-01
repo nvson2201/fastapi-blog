@@ -10,7 +10,7 @@ from app.services.exceptions.profile import (
     UserIsNotFollowed, UnableToUnsubcribeFromYourself
 )
 
-from app.services.profiles import profile_services
+from app.services.profiles import ProfileServices
 
 router = APIRouter()
 
@@ -18,7 +18,8 @@ router = APIRouter()
 @router.get("/{username}", response_model=schemas.ProfileInResponse)
 def get_profile_by_username(
     username: str,
-    current_user: models.User = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_active_user),
+    profile_services: ProfileServices = Depends()
 ) -> schemas.ProfileInResponse:
     """
     Get a specific user by id.
@@ -40,7 +41,8 @@ def get_profile_by_username(
 @router.post("/{username}", response_model=schemas.ProfileInResponse)
 def follow_for_user(
     username: str,
-    current_user: models.User = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_active_user),
+    profile_services: ProfileServices = Depends()
 ) -> schemas.ProfileInResponse:
     try:
         profile = profile_services.follow_for_user(
@@ -69,7 +71,8 @@ def follow_for_user(
 @router.delete("/{username}", response_model=schemas.ProfileInResponse)
 def unsubscribe_from_user(
     username: str,
-    current_user: models.User = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_active_user),
+    profile_services: ProfileServices = Depends()
 ) -> schemas.ProfileInResponse:
     try:
         profile = profile_services.unsubscribe_from_user(

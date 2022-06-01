@@ -8,14 +8,15 @@ from app.api.dependencies import authentication
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
     UserNotFound, UserInactive, UserIncorrectCredentials)
-from app.services.login import login_services
+from app.services.login import LoginServices
 
 router = APIRouter()
 
 
 @router.post("/login/access-token", response_model=schemas.Token)
 def login_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends()
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    login_services: LoginServices = Depends(),
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -48,7 +49,8 @@ def test_token(current_user: models.User
 
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
 def recover_password(
-    email: str
+    email: str,
+    login_services: LoginServices = Depends(),
 ) -> Any:
     """
     Password Recovery
@@ -68,7 +70,8 @@ def recover_password(
 @router.post("/reset-password/", response_model=schemas.Msg)
 def reset_password(
     token: str,
-    new_password: schemas.UserPassword
+    new_password: schemas.UserPassword,
+    login_services: LoginServices = Depends(),
 ) -> Any:
     """
     Reset password

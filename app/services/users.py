@@ -1,38 +1,33 @@
-from typing import List, Optional, Type
+from typing import List, Optional
 
+from fastapi import Depends
 from sqlalchemy import exc
-from sqlalchemy.orm import Session
 
-from app.config import settings
+from app.db.repositories.users import UserRepository
 from app.models.users import User
 from app.schemas import UserUpdate, UserCreate
+from app.schemas.datetime import DateTime
+from app.db.repositories_cache.users import UserRedisRepository
 from app.services.exceptions.users import (
     UserNotFound, UserDuplicate,
     UserInactive, UserNotSuper,
     UserForbiddenRegiser, UserIncorrectCredentials)
-from app.utils.mail import send_new_account_email
-from app.db.repositories_cache.users import UserRedisRepository
-from app.schemas.datetime import DateTime
-from app.db import repositories_cache
-from app.decorators.component import ModelType
-from app.db import repositories
-from app.db import db
-from app.decorators.component import ComponentRepository
 from app.utils.security import verify_password
+from app.utils.mail import send_new_account_email
+from app.config import settings
+from app.api.dependencies.repositories import get_redis_repo
+
+user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
 
 
-class UserServices(UserRedisRepository):
+class UserServices:
+    repository: UserRedisRepository
 
     def __init__(
         self,
-        db: Session,
-        prefix: str,
-        model: Type[ModelType],
-        repository: UserRedisRepository,
-        _crud_component: ComponentRepository,
+        repository: UserRedisRepository = Depends(user_redis_repo)
     ):
         self.repository = repository
-        super().__init__(model, db, _crud_component, prefix)
 
     def get(self, id: str) -> User:
         user = self.repository.get(id)
@@ -61,7 +56,8 @@ class UserServices(UserRedisRepository):
         if user:
             raise UserDuplicate
 
-        user = self.repository.get_by_username(username=body.username)
+        user = self.repository.get_by_username(
+            username=body.username)
 
         if user:
             raise UserDuplicate
@@ -154,12 +150,3 @@ class UserServices(UserRedisRepository):
         if not user.is_superuser:
             raise UserNotSuper
         return user
-
-
-user_services = UserServices(
-    repository=repositories_cache.users,
-    model=User,
-    db=db,
-    _crud_component=repositories.users,
-    prefix=settings.REDIS_PREFIX_USER
-)
