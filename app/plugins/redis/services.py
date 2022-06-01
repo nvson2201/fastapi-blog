@@ -25,9 +25,12 @@ class RedisServices:
             print(e)
             return {'msg': 'Bad Request!', 'error': str(e)}
 
-    def delete_cache(self, id: str):
-        redis_session.delete(id)
+    def delete_cache(self, id: str, prefix: str):
+        redis_session.delete(prefix + str(id))
         return {'msg': 'Deleted!'}
+
+    def flush_all(self):
+        return redis_session.flushall()
 
 
 redis_services = RedisServices()

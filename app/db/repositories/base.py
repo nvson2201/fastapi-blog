@@ -1,14 +1,15 @@
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, List, Optional, Type
 
 from sqlalchemy.orm import Session
 
-from app.db.repositories_cache.decorators.component import (
+from app.decorators.component import (
     ComponentRepository, ModelType, CreateSchemaType, UpdateSchemaType)
 
 
 class BaseRepository(
         ComponentRepository[ModelType, CreateSchemaType, UpdateSchemaType]
 ):
+    db: Session
 
     def __init__(self, model: Type[ModelType], db: Session):
         self.model = model
@@ -32,37 +33,32 @@ class BaseRepository(
         return objs
 
     def create(self, *, body: CreateSchemaType) -> ModelType:
-        if isinstance(body, dict):
-            body_dict = body
-        else:
-            body_dict = body.dict(exclude_unset=True)
+
+        body_dict = body.dict(exclude_unset=True)
 
         obj = self.model(**body_dict)
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
-
+        print("CREATED USER HERE!")
+        # self.db.close()
         return obj
 
     def update(
         self,
         obj: ModelType,
         *,
-        body: Union[UpdateSchemaType, Dict[str, Any]]
+        body: UpdateSchemaType
     ) -> ModelType:
-
-        if isinstance(body, dict):
-            update_data = body
-        else:
-            update_data = body.dict(exclude_unset=True)
-
+        update_data = body.dict(exclude_unset=True)
         for field in update_data:
             if field in update_data:
                 setattr(obj, field, update_data[field])
 
-        self.db.merge(obj)
+        # self.db.merge(obj)
         self.db.commit()
-
+        # self.db.refresh(obj)
+        # self.db.close()
         return obj
 
     def remove(self, *, id: int) -> ModelType:

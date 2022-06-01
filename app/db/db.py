@@ -8,6 +8,3 @@ def get_db() -> Generator:
         yield db
     finally:
         db.close()
-
-
-db = next(get_db())

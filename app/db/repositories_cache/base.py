@@ -1,21 +1,17 @@
-from typing import Any, Dict, Optional, Union, Type
+from typing import Any, Dict, Optional, Union
 
 from app.plugins.redis import redis_services
-from sqlalchemy.orm import Session
 
-from app.db.repositories_cache.decorators.decorator import (
+from app.decorators.decorator import (
     RepositoryDecorator, ModelType, CreateSchemaType, UpdateSchemaType)
-from app.db.repositories_cache.decorators.component import ComponentRepository
+from app.decorators.component import ComponentRepository
 
 
 class RedisDecorator(
     RepositoryDecorator[ModelType, CreateSchemaType, UpdateSchemaType]
 ):
 
-    def __init__(self,  model: Type[ModelType], db: Session,
-                 _crud_component: ComponentRepository, prefix: str):
-        self.model = model
-        self.db = db
+    def __init__(self, _crud_component: ComponentRepository, prefix: str):
         self._crud_component = _crud_component
         self.prefix = prefix
 
@@ -33,9 +29,10 @@ class RedisDecorator(
         )
 
     def _delete_cache(self, id: str):
-        redis_services.del_cache(
+
+        redis_services.delete_cache(
             id=str(id),
-            prefix=self.prefix
+            prefix=self.prefix,
         )
 
     def get(self, id: Any) -> Optional[ModelType]:
@@ -48,8 +45,7 @@ class RedisDecorator(
 
         if obj:
             self._set_cache(id, data=obj)
-
-            return obj
+        return obj
 
     def create(self, *, body: CreateSchemaType) -> ModelType:
         obj = self.crud_component.create(body=body)
@@ -63,11 +59,13 @@ class RedisDecorator(
         *,
         body: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
-        obj = self.crud_component.update(obj=obj, body=body)
+        obj = self.crud_component.update(obj, body=body)
         self._set_cache(id=obj.id, data=obj)
         return obj
 
     def remove(self, *, id: int) -> ModelType:
-        obj = self.crud_component.remove(id)
+        obj = self.crud_component.remove(id=id)
+
         self._delete_cache(id)
+
         return obj

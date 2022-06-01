@@ -1,14 +1,34 @@
 from typing import Dict
-from app.db.repositories import users
 
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-
-from app.config import settings
 from app.models.users import User
+
 from app.schemas.users import UserCreate, UserUpdate
+from app.db.repositories.users import UserRepository
+from app.config import settings
 from app.tests.utils.utils import (
     random_email, random_password, random_lower_string)
+
+
+def authentication_token_from_email(
+    user_repo: UserRepository,
+    *, client: TestClient, email: str
+) -> Dict[str, str]:
+    password = random_password()
+    username = random_lower_string()
+    user = user_repo.get_by_email(email=email)
+
+    if not user:
+        user_create_body = UserCreate(
+            email=email, password=password, username=username)
+        user = user_repo.create(body=user_create_body)
+    else:
+
+        user_update_body = UserUpdate(password=password)
+        user = user_repo.update(user, body=user_update_body)
+
+    return user_authentication_headers(
+        client=client, email=email, password=password)
 
 
 def user_authentication_headers(
@@ -23,34 +43,25 @@ def user_authentication_headers(
     return headers
 
 
-def create_random_user(db: Session) -> User:
+def get_superuser_token_headers(client: TestClient) -> Dict[str, str]:
+    login_data = {
+        "username": settings.FIRST_SUPERUSER,
+        "password": settings.FIRST_SUPERUSER_PASSWORD,
+    }
+    r = client.post(
+        f"{settings.API_V1_STR}/login/access-token", data=login_data)
+    tokens = r.json()
+    a_token = tokens["access_token"]
+    headers = {"Authorization": f"Bearer {a_token}"}
+    return headers
+
+
+def create_random_user(user_repo: UserRepository) -> User:
     email = random_email()
     password = random_password()
     username = random_lower_string()
-    user_body = UserCreate(email=email, password=password, username=username)
+    user_body = UserCreate(
+        email=email, password=password, username=username)
 
-    user = users.create(body=user_body)
+    user = user_repo.create(body=user_body)
     return user
-
-
-def authentication_token_from_email(
-    *, client: TestClient, email: str, db: Session
-) -> Dict[str, str]:
-    """
-    Return a valid token for the user with given email.
-    If the user doesn't exist it is created first.
-    """
-    password = random_password()
-    username = random_lower_string()
-    user = users.get_by_email(email=email)
-    if not user:
-
-        user_update_body = UserCreate(
-            email=email, password=password, username=username)
-        user = users.create(body=user_update_body)
-    else:
-        user_update_body = UserUpdate(password=password)
-        user = users.update(user, body=user_update_body)
-
-    return user_authentication_headers(
-        client=client, email=email, password=password)

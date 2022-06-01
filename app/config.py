@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     EXPEIRATION_TIME_CACHE: int = 60 * 24 * 5
 
+    DEFAULT_ARTICLES_LIMIT = 20
+    DEFAULT_ARTICLES_OFFSET = 0
+
     REDIS_HOST = "localhost"
     REDIS_PORT = "6379"
     REDIS_PASSWORD = "123456"
@@ -21,7 +24,7 @@ class Settings(BaseSettings):
     EMAILS_ENABLED: bool = False
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
     FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
-    FIRST_SUPERUSER_USERNAME = "admin"
+    FIRST_SUPERUSER_USERNAME = "user1"
     FIRST_SUPERUSER_PASSWORD: str = "string11A"
     USERS_OPEN_REGISTRATION: bool = False
 
@@ -31,12 +34,17 @@ class Settings(BaseSettings):
     REDIS_HOST = "localhost"
     REDIS_PASSWORD = "123456"
 
+    DATABASE_URL_TEST = "mysql+mysqlconnector://test:test@localhost:3306/test"
+
     KAFKA_PRODUCER_BOOTSTRAP_URL = 'localhost:29092'
     KAFKA_CONSUMER_BOOTSTRAP_URL = 'localhost:29092'
     KAFKA_ADMIN_BOOTSTRAP_URL = 'localhost:29092'
-    KAFKA_TOPIC_POST_VIEWS = 'views'
+
     KAFKA_CONSUMER_GROUP = 'mygroup'
     KAFKA_SESSION_TIMEOUT_MS = 6000
+
+    KAFKA_TOPIC_POST_NOFICATIONS = 'notifications'
+    KAFKA_TOPIC_POST_VIEWS = 'views'
 
     KAFKA_CONSUMER_CONFIG = {
         'bootstrap.servers': KAFKA_CONSUMER_BOOTSTRAP_URL,

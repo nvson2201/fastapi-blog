@@ -21,17 +21,18 @@ from app.decorators.component import ComponentRepository
 from app.models import User
 from app.services.exceptions.favorites import (
     PostAlreadyFavoried, PostStillNotFavorited)
+from app.services.profiles import profile_services
 
 
 class PostServices(PostRedisRepository):
 
     def __init__(
         self,
-        repository: PostRedisRepository,
-        model: Type[ModelType],
         db: Session,
+        prefix: str,
+        model: Type[ModelType],
+        repository: PostRedisRepository,
         _crud_component: ComponentRepository,
-        prefix: str
     ):
         self.repository = repository
         super().__init__(model, db, _crud_component, prefix)
@@ -42,18 +43,24 @@ class PostServices(PostRedisRepository):
         if not post_record:
             raise PostNotFound
 
-        producer.produce({'id': post_record.id})
+        producer.produce(
+            {'id': post_record.id}
+        )
 
-        author = repositories.users.get_profile_by_id(
-            id=post_record.author_id, requested_user=requested_user)
-
-        tagList = self.repository.get_tags_for_post_by_id(id=post_record.id)
-
+        author = profile_services.get_profile_by_id(
+            id=post_record.author_id,
+            requested_user=requested_user
+        )
+        tagList = self.repository.get_tags_for_post_by_id(
+            id=post_record.id
+        )
         favorited = self.repository.is_post_favorited_by_user(
-            post=post_record, user=requested_user
+            post=post_record,
+            user=requested_user
         )
         favorites_count = self.repository.get_favorites_count_for_post_by_id(
-            id=post_record.id)
+            id=post_record.id
+        )
 
         post = PostInResponse(
             **jsonable_encoder(post_record),
@@ -68,6 +75,7 @@ class PostServices(PostRedisRepository):
     def update(self, *, id: str, body: PostUpdate, requested_user: User):
 
         post_in_db = self.repository.get(id)
+
         if not post_in_db:
             raise PostNotFound
         try:
@@ -82,23 +90,41 @@ class PostServices(PostRedisRepository):
 
         new_tags = list(set(body.tags) - set(old_tags))
 
-        self.remove_link_tags_to_post_by_id(id=id, tags=old_tags)
-        self.link_new_tags_to_post_by_id(id=id, tags=new_tags)
+        self.remove_link_tags_to_post_by_id(
+            id=id, tags=old_tags
+        )
+        self.link_new_tags_to_post_by_id(
+            id=id, tags=new_tags
+        )
 
-        post_in_response = self.get(id=id, requested_user=requested_user)
+        post_in_response = self.get(
+            id=id, requested_user=requested_user
+        )
+
         return post_in_response
 
     def create_with_owner(self, body: PostCreate, author_id: int):
+
         body = jsonable_encoder(body)
-        post_in_db_create = PostInDBCreate(**body, author_id=author_id)
-        post_record = self.repository.create(body=post_in_db_create)
+
+        post_in_db_create = PostInDBCreate(
+            **body, author_id=author_id
+        )
+
+        post_record = self.repository.create(
+            body=post_in_db_create
+        )
 
         self.repository.link_new_tags_to_post_by_id(
-            id=post_record.id, tags=body['tagList'])
+            id=post_record.id, tags=body['tagList']
+        )
 
         author = repositories.users.get(author_id)
 
-        post = self.get(id=post_record.id, requested_user=author)
+        post = self.get(
+            id=post_record.id,
+            requested_user=author
+        )
 
         return post
 
@@ -125,7 +151,10 @@ class PostServices(PostRedisRepository):
             requested_user=requested_user
         )
         posts = [
-            self.get(id=post.id, requested_user=requested_user)
+            self.get(
+                id=post.id,
+                requested_user=requested_user
+            )
             for post in posts_in_db
         ]
 
@@ -135,7 +164,11 @@ class PostServices(PostRedisRepository):
         )
 
     def remove(self, *, id: int, requested_user: User):
-        post = self.get(id=id, requested_user=requested_user)
+
+        post = self.get(
+            id=id,
+            requested_user=requested_user
+        )
         self.repository.remove(id=id)
         return post
 
@@ -145,15 +178,24 @@ class PostServices(PostRedisRepository):
     def mark_post_as_favorite(
         self, *, id: int, user: User
     ) -> PostInResponse:
-        post = self.get(id=id, requested_user=user)
+        post = self.get(
+            id=id,
+            requested_user=user
+        )
 
         if not post:
             raise PostNotFound
 
-        if self.repository.is_post_favorited_by_user(post=post, user=user):
+        if self.repository.is_post_favorited_by_user(
+                post=post,
+                user=user
+        ):
             raise PostAlreadyFavoried
 
-        self.repository.add_post_into_favorites(post=post, user=user)
+        self.repository.add_post_into_favorites(
+            post=post, user=user
+        )
+
         post.favorites_count += 1
 
         return post
@@ -166,10 +208,15 @@ class PostServices(PostRedisRepository):
         if not post:
             raise PostNotFound
 
-        if not self.repository.is_post_favorited_by_user(post=post, user=user):
+        if not self.repository.is_post_favorited_by_user(
+                post=post, user=user
+        ):
             raise PostStillNotFavorited
 
-        self.repository.delete_post_from_favorites(post=post, user=user)
+        self.repository.delete_post_from_favorites(
+            post=post, user=user
+        )
+
         post.favorites_count -= 1
 
         return post
@@ -183,11 +230,16 @@ class PostServices(PostRedisRepository):
     ) -> ListOfPostsInResponse:
 
         posts_in_db = self.repository.get_posts_for_feed(
-            user=user, limit=limit, offset=offset
+            user=user,
+            limit=limit,
+            offset=offset
         )
 
         posts = [
-            self.get(id=post.id, requested_user=user)
+            self.get(
+                id=post.id,
+                requested_user=user
+            )
             for post in posts_in_db
         ]
 
@@ -198,9 +250,9 @@ class PostServices(PostRedisRepository):
 
 
 post_services = PostServices(
-    repository=repositories_cache.posts,
-    model=Post,
     db=db,
+    model=Post,
     _crud_component=repositories.posts,
+    repository=repositories_cache.posts,
     prefix=settings.REDIS_PREFIX_USER
 )

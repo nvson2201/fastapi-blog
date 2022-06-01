@@ -3,7 +3,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 from app.schemas.profiles import Profile
-from app.schemas.common import DateTimeModelMixin
+from app.config import settings
+
+
+class PostCreate(BaseModel):
+    title: str
+    body: str
+    tags: Optional[List[str]] = Field([], alias="tagList")
 
 
 class PostUpdate(BaseModel):
@@ -11,16 +17,24 @@ class PostUpdate(BaseModel):
     body: Optional[str] = None
     tags: Optional[List[str]] = Field([], alias="tagList")
 
-
-class ListOfPostsInResponse(BaseModel):
-    posts: Optional[List[PostInResponse]] = None
-    posts_count: Optional[int] = None
-
-
-class PostCreate(BaseModel):
+class PostInDBCreate(BaseModel):
     title: str
     body: str
-    tags: Optional[List[str]] = Field([], alias="tagList")
+    author_id: int
+
+
+class PostInDBUpdate(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+
+
+class PostInDB(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+    author_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    views: Optional[int] = None
 
 
 class PostInResponse(BaseModel):
@@ -41,17 +55,12 @@ class ListOfPostsInResponse(BaseModel):
     posts_count: Optional[int] = None
 
 
-class PostInDBCreate(BaseModel):
-    title: str
-    body: str
-    author_id: int
-
-
-class PostInDB(DateTimeModelMixin):
-    title: str
-    body: str
-    author_id: int
-    views: int
+class PostsFilters(BaseModel):
+    tags: Optional[str] = None
+    author: Optional[str] = None
+    user_favorited: Optional[str] = None
+    limit: int = Field(settings.DEFAULT_ARTICLES_LIMIT, ge=1)
+    offset: int = Field(settings.DEFAULT_ARTICLES_OFFSET, ge=0)
 
 
 class PostUpdateView(BaseModel):

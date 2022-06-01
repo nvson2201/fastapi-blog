@@ -18,6 +18,7 @@ from app.utils.mail import (
 )
 from app.utils.security import get_password_hash
 from app.db import repositories_cache
+from app.services.users import user_services
 
 
 class LoginServices:
@@ -26,8 +27,9 @@ class LoginServices:
         self.repository = repository
 
     def login_access_token(self, email: str, password: str) -> Any:
-        user = self.repository.authenticate(
-            email=email, password=password
+        user = user_services.authenticate(
+            email=email,
+            password=password
         )
 
         if not user:
@@ -50,9 +52,12 @@ class LoginServices:
 
         if not user:
             raise UserNotFound
+
         password_reset_token = generate_password_reset_token(email=email)
         send_reset_password_email(
-            email_to=user.email, email=email, token=password_reset_token
+            email=email,
+            email_to=user.email,
+            token=password_reset_token
         )
         return {"msg": "Password recovery email sent"}
 
@@ -62,13 +67,16 @@ class LoginServices:
         new_password: schemas.UserPassword,
     ) -> Any:
         id = verify_password_reset_token(token)
+
         if not id:
             raise InvalidToken
         user = self.repository.get(id)
+
         if not user:
             raise UserNotFound
         elif not self.repository.is_active(user):
             raise UserInactive
+
         hashed_password = get_password_hash(new_password.body)
         user.hashed_password = hashed_password
 

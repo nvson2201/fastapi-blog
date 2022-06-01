@@ -1,7 +1,7 @@
 from typing import List, Any, Optional
 
 from sqlalchemy import desc
-from sqlalchemy import exc
+
 from app.db.repositories.base import BaseRepository
 from app.models.posts import Post
 from app.models import PostsToTags, Tag, Favorite, User
@@ -9,15 +9,16 @@ from app.schemas.posts import (
     PostCreate, PostUpdate,
     PostInDB, PostInDBCreate, PostInDBUpdate)
 from app.config import settings
-from app.db import db
 from app.db.repositories.tags import TagRepository
 from app.models import FollowersToFollowings
 
 
 class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
-    def __init__(self, model, db):
-        super().__init__(model, db)
-        self._tag_repo = TagRepository(Tag, db)
+    _tag_repo: TagRepository
+
+    def __init__(self, db):
+        super().__init__(Post, db)
+        self._tag_repo = TagRepository(db)
 
     def create(self, *, body: PostInDBCreate) -> Post:
         if isinstance(body, dict):
@@ -40,7 +41,7 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     def get_multi(
         self, *, author_id: int, offset: int = 0, limit: int = 100
     ) -> List[Post]:
-        q = self.db.query(self.model)
+        q = self.db.query(Post)
         q = q.filter(Post.author_id == author_id)
         q = q.limit(limit)
         q = q.offset(offset)
@@ -67,11 +68,10 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         return super().update(post, body=update_data)
 
     def update_views(self, id: Any):
-        q = self.db.query(self.model)
-        q = q.filter(self.model.id == id)
+        q = self.db.query(Post)
+        q = q.filter(Post.id == id)
         post = q.first()
-
-        post.views = self.model.views + 1
+        post.views = Post.views + 1
         self.db.commit()
         self.db.refresh(post)
 
@@ -97,12 +97,8 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             tag = self.db.query(Tag).filter(Tag.tag == tag).first()
             post_to_tag = PostsToTags(post_id=id, tag_id=tag.id)
 
-            try:
-                self.db.add(post_to_tag)
-                self.db.commit()
-            except exc.IntegrityError:
-                raise Exception("No post with this id")
-
+            self.db.add(post_to_tag)
+            self.db.commit()
             self.db.refresh(post_to_tag)
 
     def remove_link_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
@@ -201,6 +197,3 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         posts = q.all()
 
         return posts
-
-
-posts = PostRepository(Post, db)
