@@ -1,41 +1,40 @@
-from typing import Type, Optional
+from typing import Optional
 
-from sqlalchemy import exc
-from sqlalchemy.orm import Session
+from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
-from app.models.posts import Post
+from sqlalchemy import exc
+
 from app.schemas.posts import (
     PostUpdate, PostCreate,
     PostInResponse, ListOfPostsInResponse,
     PostInDBCreate
 )
-from app.services.exceptions.posts import PostNotFound, PostDuplicate
-from app.db.repositories_cache.posts import PostRedisRepository
-from app.plugins.kafka import producer
-from app.db import repositories_cache
-from app.config import settings
-from app.decorators.component import ModelType
-from app.db import repositories
-from app.db import db
-from app.decorators.component import ComponentRepository
 from app.models import User
+from app.plugins.kafka import producer
+from app.db.repositories.posts import PostRepository
+from app.db.repositories_cache.posts import PostRedisRepository
 from app.services.exceptions.favorites import (
     PostAlreadyFavoried, PostStillNotFavorited)
-from app.services.profiles import profile_services
+from app.services.exceptions.posts import PostNotFound, PostDuplicate
+from app.services.profiles import ProfileServices
+from app.api.dependencies.repositories import get_redis_repo
+
+post_redis_repo = get_redis_repo(PostRedisRepository, PostRepository)
 
 
-class PostServices(PostRedisRepository):
+class PostServices:
+
+    repository: PostRedisRepository
+
+    profile_services: ProfileServices
 
     def __init__(
         self,
-        db: Session,
-        prefix: str,
-        model: Type[ModelType],
-        repository: PostRedisRepository,
-        _crud_component: ComponentRepository,
+        repository: PostRedisRepository = Depends(post_redis_repo),
+        profile_services: ProfileServices = Depends()
     ):
         self.repository = repository
-        super().__init__(model, db, _crud_component, prefix)
+        self.profile_services = profile_services
 
     def get(self, *, id: str, requested_user: User) -> PostInResponse:
         post_record = self.repository.get(id)
@@ -47,7 +46,7 @@ class PostServices(PostRedisRepository):
             {'id': post_record.id}
         )
 
-        author = profile_services.get_profile_by_id(
+        author = self.profile_services.get_profile_by_id(
             id=post_record.author_id,
             requested_user=requested_user
         )
@@ -115,11 +114,21 @@ class PostServices(PostRedisRepository):
             body=post_in_db_create
         )
 
+        notification_message = {
+            "content": "Created new post!",
+            "sender_id": author_id,
+            "post_id": post_record.id
+        }
+
+        producer.produce(
+            notification_message
+        )
+
         self.repository.link_new_tags_to_post_by_id(
             id=post_record.id, tags=body['tagList']
         )
 
-        author = repositories.users.get(author_id)
+        author = self.profile_services.get_profile_by_id(id=author_id)
 
         post = self.get(
             id=post_record.id,
@@ -247,12 +256,3 @@ class PostServices(PostRedisRepository):
             posts=posts,
             posts_count=len(posts),
         )
-
-
-post_services = PostServices(
-    db=db,
-    model=Post,
-    _crud_component=repositories.posts,
-    repository=repositories_cache.posts,
-    prefix=settings.REDIS_PREFIX_USER
-)

@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
 from app.api.dependencies import authentication
-from app.services.posts import post_services
 from app.services.exceptions.favorites import (
     PostStillNotFavorited, PostAlreadyFavoried)
+from app.services.posts import PostServices
 
 router = APIRouter()
 
@@ -14,7 +14,8 @@ def mark_post_as_favorite(
     *,
     id: int,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> schemas.PostInResponse:
     try:
         return post_services.mark_post_as_favorite(id=id, user=current_user)
@@ -30,7 +31,8 @@ def remove_post_from_favorites(
     *,
     id: int,
     current_user: models.User = Depends(
-        authentication.get_current_active_user)
+        authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> schemas.PostInResponse:
     try:
         return post_services.remove_post_from_favorites(
@@ -49,6 +51,7 @@ def get_posts_for_user_feed(
     offset: int = 0,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
+    post_services: PostServices = Depends()
 ) -> schemas.ListOfPostsInResponse:
 
     return post_services.get_posts_for_user_feed(

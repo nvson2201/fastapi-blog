@@ -1,33 +1,44 @@
 from typing import Any
 from datetime import timedelta
 
-from app import schemas
-from app.config import settings
+from fastapi import Depends
 
+from app import schemas
+from app.db.repositories.users import UserRepository
+from app.db.repositories_cache.users import UserRedisRepository
+from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
     UserNotFound,
     UserInactive,
     UserIncorrectCredentials)
-from app.services.exceptions.tokens import InvalidToken
-from app.db.repositories_cache.users import UserRedisRepository
-from app.utils import security
+from app.services.users import UserServices
+from app.api.dependencies.repositories import get_redis_repo
 from app.utils.mail import (
     generate_password_reset_token,
     send_reset_password_email,
     verify_password_reset_token,
 )
+from app.utils import security
 from app.utils.security import get_password_hash
-from app.db import repositories_cache
-from app.services.users import user_services
+from app.config import settings
+
+user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
 
 
 class LoginServices:
+    user_service: UserServices
+    repository: UserRedisRepository
 
-    def __init__(self, repository: UserRedisRepository):
+    def __init__(
+        self,
+        repository: UserRedisRepository = Depends(user_redis_repo),
+        user_services: UserServices = Depends()
+    ):
         self.repository = repository
+        self.user_services = user_services
 
     def login_access_token(self, email: str, password: str) -> Any:
-        user = user_services.authenticate(
+        user = self.user_services.authenticate(
             email=email,
             password=password
         )
@@ -82,6 +93,3 @@ class LoginServices:
 
         self.repository.update(id=user.id, body=user)
         return {"msg": "Password updated successfully"}
-
-
-login_services = LoginServices(repository=repositories_cache.users)

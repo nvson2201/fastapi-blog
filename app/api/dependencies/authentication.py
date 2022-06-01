@@ -5,8 +5,8 @@ from app import models
 from app.config import settings
 from app.services.exceptions.users import (
     UserNotFound, UserInvalidCredentials, UserInactive, UserNotSuper)
-from app.services.authentication import auth_services
-from app.services.users import user_services
+from app.services.authentication import AuthenticationService
+from app.services.users import UserServices
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -14,7 +14,8 @@ reusable_oauth2 = OAuth2PasswordBearer(
 
 
 def get_current_user(
-    token: str = Depends(reusable_oauth2)
+    token: str = Depends(reusable_oauth2),
+    auth_services: AuthenticationService = Depends()
 ) -> models.User:
     try:
         return auth_services.get_current_user(token=token)
@@ -29,7 +30,8 @@ def get_current_user(
 
 
 def get_current_active_user(
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
+    user_services: UserServices = Depends()
 ) -> models.User:
     try:
         return user_services.is_active(current_user)
@@ -38,7 +40,8 @@ def get_current_active_user(
 
 
 def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
+    user_services: UserServices = Depends()
 ) -> models.User:
     try:
         return user_services.is_superuser(current_user)

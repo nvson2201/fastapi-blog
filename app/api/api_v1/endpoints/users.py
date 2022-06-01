@@ -11,18 +11,22 @@ from app.services.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
 from app.schemas.datetime import DateTime
-from app.services.users import user_services
+from app.services.users import UserServices
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.UserInResponse])
+@ router.get(
+    "/",
+    response_model=List[schemas.UserInResponse],
+    dependencies=[Depends(get_current_active_superuser)]
+)
 def read_users(
     offset: int = 0,
     limit: int = 100,
     date_start: DateTime = None,
     date_end: DateTime = None,
-    current_user: models.User = Depends(get_current_active_superuser)
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Retrieve users by admin.
@@ -34,11 +38,15 @@ def read_users(
     return users
 
 
-@router.post("/", response_model=schemas.UserInResponse)
+@router.post(
+    "/",
+    response_model=schemas.UserInResponse,
+    dependencies=[Depends(get_current_active_superuser)]
+)
 def create_user(
     *,
     body: schemas.UserCreate,
-    current_user: models.User = Depends(get_current_active_superuser)
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Create new user by admin.
@@ -54,11 +62,12 @@ def create_user(
     return user
 
 
-@router.put("/me", response_model=schemas.UserInResponse)
+@ router.put("/me", response_model=schemas.UserInResponse)
 def update_user_me(
     *,
     body: schemas.UserUpdate,
-    current_user: models.User = Depends(get_current_active_user)
+    current_user: models.User = Depends(get_current_active_user),
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Update own user.
@@ -74,7 +83,7 @@ def update_user_me(
     return user
 
 
-@router.get("/me", response_model=schemas.UserInResponse)
+@ router.get("/me", response_model=schemas.UserInResponse)
 def read_user_me(
     current_user: models.User = Depends(get_current_active_user),
 ) -> Any:
@@ -84,10 +93,11 @@ def read_user_me(
     return current_user
 
 
-@router.post("/open", response_model=schemas.UserInResponse)
+@ router.post("/open", response_model=schemas.UserInResponse)
 def create_user_open(
     *,
-    body: schemas.UserCreate
+    body: schemas.UserCreate,
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -108,10 +118,14 @@ def create_user_open(
     return user
 
 
-@router.get("/{user_id}", response_model=schemas.UserInResponse)
+@ router.get(
+    "/{user_id}",
+    response_model=schemas.UserInResponse,
+    dependencies=[Depends(get_current_active_user)]
+)
 def read_user_by_id(
     user_id: int,
-    current_user: models.User = Depends(get_current_active_user)
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Get a specific user by id.
@@ -127,12 +141,16 @@ def read_user_by_id(
     return user
 
 
-@router.put("/{user_id}", response_model=schemas.UserInResponse)
+@ router.put(
+    "/{user_id}",
+    response_model=schemas.UserInResponse,
+    dependencies=[Depends(get_current_active_superuser)]
+)
 def update_user(
     *,
     user_id: int,
     body: schemas.UserUpdate,
-    current_user: models.User = Depends(get_current_active_superuser)
+    user_services: UserServices = Depends()
 ) -> Any:
     """
     Update a specific user by id.

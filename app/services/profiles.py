@@ -1,8 +1,9 @@
-from typing import Optional, Type, Union
+from typing import Optional, Union
 
-from sqlalchemy.orm import Session
 
-from app.config import settings
+from fastapi import Depends
+from app.db.repositories.users import UserRepository
+
 from app.models.users import User
 from app.schemas import Profile, ProfileInResponse
 from app.services.exceptions.users import UserNotFound
@@ -10,32 +11,24 @@ from app.services.exceptions.profile import (
     UnableToFollowYourself, UserIsAlreadyFollowed,
     UserIsNotFollowed, UnableToUnsubcribeFromYourself
 )
-
 from app.db.repositories_cache.users import UserRedisRepository
+from app.api.dependencies.repositories import get_redis_repo
 
-from app.db import repositories_cache
-from app.decorators.component import ModelType
-from app.db import repositories
-from app.db import db
-from app.decorators.component import ComponentRepository
+user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
 
 
-class ProfileServices(UserRedisRepository):
+class ProfileServices:
+    repository: UserRedisRepository
 
     def __init__(
         self,
-        repository: UserRedisRepository,
-        model: Type[ModelType],
-        db: Session,
-        _crud_component: ComponentRepository,
-        prefix: str
+        repository: UserRedisRepository = Depends(user_redis_repo)
     ):
         self.repository = repository
-        super().__init__(model, db, _crud_component, prefix)
 
     def get_profile_by_id(
         self, *, id: int,
-        requested_user: Optional[Union[User, Profile]]
+        requested_user: Optional[Union[User, Profile]] = None,
     ) -> Optional[Union[User, Profile]]:
 
         user = self.repository.get(id)
@@ -122,12 +115,3 @@ class ProfileServices(UserRedisRepository):
         return ProfileInResponse(profile=profile.copy(
             update={"following": False})
         )
-
-
-profile_services = ProfileServices(
-    repository=repositories_cache.users,
-    model=User,
-    db=db,
-    _crud_component=repositories.users,
-    prefix=settings.REDIS_PREFIX_USER
-)
