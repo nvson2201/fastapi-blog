@@ -37,6 +37,7 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
         return super().create(body=create_data)
 
+
     def get_multi(
         self, *, author_id: int, offset: int = 0, limit: int = 100
     ) -> List[Post]:
@@ -129,7 +130,6 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             return False
 
     def add_post_into_favorites(self, *, post: Post, user: User) -> None:
-
         favorite_record = Favorite()
 
         favorite_record.post_id = post.id

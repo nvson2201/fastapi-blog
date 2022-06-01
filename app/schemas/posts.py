@@ -17,7 +17,6 @@ class PostUpdate(BaseModel):
     body: Optional[str] = None
     tags: Optional[List[str]] = Field([], alias="tagList")
 
-
 class PostInDBCreate(BaseModel):
     title: str
     body: str
@@ -70,3 +69,5 @@ class PostUpdateView(BaseModel):
 
     class Config:
         orm_mode = True
+
+
