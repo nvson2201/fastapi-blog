@@ -1,9 +1,5 @@
 from typing import Optional, Union
 
-
-from fastapi import Depends
-from app.db.repositories.users import UserRepository
-
 from app.models.users import User
 from app.schemas import Profile, ProfileInResponse
 from app.services.exceptions.users import UserNotFound
@@ -11,19 +7,11 @@ from app.services.exceptions.profile import (
     UnableToFollowYourself, UserIsAlreadyFollowed,
     UserIsNotFollowed, UnableToUnsubcribeFromYourself
 )
-from app.db.repositories_cache.users import UserRedisRepository
-from app.api.dependencies.repositories import get_redis_repo
-
-user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
 
 
 class ProfileServices:
-    repository: UserRedisRepository
 
-    def __init__(
-        self,
-        repository: UserRedisRepository = Depends(user_redis_repo)
-    ):
+    def __init__(self, repository):
         self.repository = repository
 
     def get_profile_by_id(

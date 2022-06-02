@@ -103,13 +103,6 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         target_user: Optional[Union[User, Profile]],
         requested_user: Optional[Union[User, Profile]]
     ) -> bool:
-        q = self.db.query(User)
-
-        requested_user = q.filter(
-            User.username == requested_user.username).first()
-
-        target_user = q.filter(
-            User.username == target_user.username).first()
 
         q = self.db.query(FollowersToFollowings)
 
@@ -132,13 +125,6 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         target_user: Optional[Union[User, Profile]],
         requested_user: Optional[Union[User, Profile]]
     ) -> None:
-        q = self.db.query(User)
-
-        requested_user = q.filter(
-            User.username == requested_user.username).first()
-
-        target_user = q.filter(
-            User.username == target_user.username).first()
 
         followers_to_followings_record = FollowersToFollowings()
 
@@ -155,16 +141,6 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         target_user: Optional[Union[User, Profile]],
         requested_user: Optional[Union[User, Profile]]
     ) -> None:
-
-        q = self.db.query(User)
-
-        requested_user = q.filter(
-            User.username == requested_user.username
-        ).first()
-
-        target_user = q.filter(
-            User.username == target_user.username
-        ).first()
 
         q = self.db.query(FollowersToFollowings)
 

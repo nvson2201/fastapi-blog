@@ -1,6 +1,5 @@
 from typing import Optional
 
-from fastapi import Depends
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import exc
 
@@ -11,28 +10,13 @@ from app.schemas.posts import (
 )
 from app.models import User
 from app.plugins.kafka import producer
-from app.db.repositories.posts import PostRepository
-from app.db.repositories_cache.posts import PostRedisRepository
 from app.services.exceptions.favorites import (
     PostAlreadyFavoried, PostStillNotFavorited)
 from app.services.exceptions.posts import PostNotFound, PostDuplicate
-from app.services.profiles import ProfileServices
-from app.api.dependencies.repositories import get_redis_repo
-
-post_redis_repo = get_redis_repo(PostRedisRepository, PostRepository)
 
 
 class PostServices:
-
-    repository: PostRedisRepository
-
-    profile_services: ProfileServices
-
-    def __init__(
-        self,
-        repository: PostRedisRepository = Depends(post_redis_repo),
-        profile_services: ProfileServices = Depends()
-    ):
+    def __init__(self, repository, profile_services):
         self.repository = repository
         self.profile_services = profile_services
 

@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 
 from app import models, schemas
+from app.api.dependencies.services import get_post_services
 from app.db import repositories
 from app.api.dependencies import authentication
 from app.services.exceptions.posts import PostNotFound
@@ -18,7 +19,7 @@ def read_posts(
     posts_filters: PostsFilters = Depends(get_post_filters),
     current_user: models.User = Depends(
         authentication.get_current_active_user),
-    post_services: PostServices = Depends()
+    post_services: PostServices = Depends(get_post_services)
 ) -> ListOfPostsInResponse:
     return post_services.posts_filters(
         tags=posts_filters.tags,
@@ -36,7 +37,7 @@ def create_post(
     body: schemas.PostCreate,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
-    post_services: PostServices = Depends()
+    post_services: PostServices = Depends(get_post_services)
 ) -> Any:
     """
     Create new post.
@@ -53,7 +54,7 @@ def update_post(
     body: schemas.PostUpdate,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
-    post_services: PostServices = Depends()
+    post_services: PostServices = Depends(get_post_services)
 ) -> Any:
     """
     Update an post.
@@ -74,7 +75,7 @@ def read_post_by_id(
     id: int,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
-    post_services: PostServices = Depends()
+    post_services: PostServices = Depends(get_post_services)
 ) -> Any:
     """
     Get post by ID.
@@ -92,7 +93,7 @@ def delete_post(
     id: int,
     current_user: models.User = Depends(
         authentication.get_current_active_user),
-    post_services: PostServices = Depends()
+    post_services: PostServices = Depends(get_post_services)
 ) -> Any:
     """
     Delete an post.
