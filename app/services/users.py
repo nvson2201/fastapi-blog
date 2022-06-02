@@ -1,13 +1,11 @@
 from typing import List, Optional
 
-from fastapi import Depends
 from sqlalchemy import exc
 
-from app.db.repositories.users import UserRepository
 from app.models.users import User
 from app.schemas import UserUpdate, UserCreate
 from app.schemas.datetime import DateTime
-from app.db.repositories_cache.users import UserRedisRepository
+
 from app.services.exceptions.users import (
     UserNotFound, UserDuplicate,
     UserInactive, UserNotSuper,
@@ -15,18 +13,11 @@ from app.services.exceptions.users import (
 from app.utils.security import verify_password
 from app.utils.mail import send_new_account_email
 from app.config import settings
-from app.api.dependencies.repositories import get_redis_repo
-
-user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
 
 
 class UserServices:
-    repository: UserRedisRepository
 
-    def __init__(
-        self,
-        repository: UserRedisRepository = Depends(user_redis_repo)
-    ):
+    def __init__(self, repository):
         self.repository = repository
 
     def get(self, id: str) -> User:
@@ -138,7 +129,7 @@ class UserServices:
         if not user:
             raise UserNotFound
         if not verify_password(password, user.hashed_password):
-            return UserIncorrectCredentials
+            raise UserIncorrectCredentials
         return user
 
     def is_active(self, user: User) -> bool:

@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app import models, schemas
 from app.api.dependencies import authentication
+from app.api.dependencies.services import get_login_services
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
     UserNotFound, UserInactive, UserIncorrectCredentials)
@@ -16,7 +17,7 @@ router = APIRouter()
 @router.post("/login/access-token", response_model=schemas.Token)
 def login_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    login_services: LoginServices = Depends(),
+    login_services: LoginServices = Depends(get_login_services)
 ) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -50,7 +51,7 @@ def test_token(current_user: models.User
 @router.post("/password-recovery/{email}", response_model=schemas.Msg)
 def recover_password(
     email: str,
-    login_services: LoginServices = Depends(),
+    login_services: LoginServices = Depends(get_login_services)
 ) -> Any:
     """
     Password Recovery
@@ -71,7 +72,7 @@ def recover_password(
 def reset_password(
     token: str,
     new_password: schemas.UserPassword,
-    login_services: LoginServices = Depends(),
+    login_services: LoginServices = Depends(get_login_services),
 ) -> Any:
     """
     Reset password

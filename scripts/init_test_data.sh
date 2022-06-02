@@ -1,1 +1,1 @@
-python -m  app.tests.utils.init_test_data
+python -m app.tests.utils.init_test_data

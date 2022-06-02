@@ -40,5 +40,5 @@ docker compose exec broker \
 
 ## Run app
 ```console
-sh run.sh
+pipenv run app
 ```

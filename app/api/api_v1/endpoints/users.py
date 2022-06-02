@@ -7,6 +7,7 @@ from app.api.dependencies.authentication import (
     get_current_active_superuser,
     get_current_active_user,
 )
+from app.api.dependencies.services import get_user_services
 from app.services.exceptions.users import (
     UserNotFound, UserDuplicate, UserForbiddenRegiser
 )
@@ -26,7 +27,7 @@ def read_users(
     limit: int = 100,
     date_start: DateTime = None,
     date_end: DateTime = None,
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Retrieve users by admin.
@@ -46,7 +47,7 @@ def read_users(
 def create_user(
     *,
     body: schemas.UserCreate,
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Create new user by admin.
@@ -67,7 +68,7 @@ def update_user_me(
     *,
     body: schemas.UserUpdate,
     current_user: models.User = Depends(get_current_active_user),
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Update own user.
@@ -97,7 +98,7 @@ def read_user_me(
 def create_user_open(
     *,
     body: schemas.UserCreate,
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Create new user without the need to be logged in.
@@ -125,7 +126,7 @@ def create_user_open(
 )
 def read_user_by_id(
     user_id: int,
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Get a specific user by id.
@@ -150,7 +151,7 @@ def update_user(
     *,
     user_id: int,
     body: schemas.UserUpdate,
-    user_services: UserServices = Depends()
+    user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
     Update a specific user by id.

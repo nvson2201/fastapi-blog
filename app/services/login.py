@@ -1,18 +1,12 @@
 from typing import Any
 from datetime import timedelta
 
-from fastapi import Depends
-
 from app import schemas
-from app.db.repositories.users import UserRepository
-from app.db.repositories_cache.users import UserRedisRepository
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
     UserNotFound,
     UserInactive,
     UserIncorrectCredentials)
-from app.services.users import UserServices
-from app.api.dependencies.repositories import get_redis_repo
 from app.utils.mail import (
     generate_password_reset_token,
     send_reset_password_email,
@@ -22,18 +16,9 @@ from app.utils import security
 from app.utils.security import get_password_hash
 from app.config import settings
 
-user_redis_repo = get_redis_repo(UserRedisRepository, UserRepository)
-
 
 class LoginServices:
-    user_service: UserServices
-    repository: UserRedisRepository
-
-    def __init__(
-        self,
-        repository: UserRedisRepository = Depends(user_redis_repo),
-        user_services: UserServices = Depends()
-    ):
+    def __init__(self, repository, user_services):
         self.repository = repository
         self.user_services = user_services
 

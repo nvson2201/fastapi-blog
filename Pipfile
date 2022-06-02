@@ -50,6 +50,7 @@ h11 = "==0.9"
 loguru = "*"
 confluent-kafka = "*"
 pytest-cov = "*"
+pytest-mock = "*"
 
 [dev-packages]
 flake8 = "*"
@@ -60,7 +61,6 @@ pytest = "*"
 
 [requires]
 python_version = "3.8"
-
 
 [scripts]
 app = "uvicorn --log-level info app.main:app --reload"
