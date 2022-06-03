@@ -37,7 +37,6 @@ def db():
     db.close()
     transaction.rollback()
     connection.close()
-
     redis_services.flush_all()
 
 

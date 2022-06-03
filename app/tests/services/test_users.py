@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
 
 import pytest
 from sqlalchemy import exc
@@ -14,10 +14,10 @@ from app.services.exceptions.users import (
 class TestUserServices:
     def test_get(self, mock_repo):
         repo = mock_repo()
-        repo.get.side_effect = [user_expected := User(id=2022), None]
+        repo.get.side_effect = [sentinel.user, None]
 
         result = UserServices(repo).get(id=2022)
-        assert result == user_expected
+        assert result == sentinel.user
 
         with pytest.raises(UserNotFound):
             UserServices(repo).get(id=0)
@@ -28,13 +28,13 @@ class TestUserServices:
         email = "test@gapo.com.vn"
 
         repo.get_by_email.side_effect = [
-            user_expected := User(email=email),
+            sentinel.user,
             None
         ]
 
         result = UserServices(repo).get_by_email(
             email=email)
-        assert result == user_expected
+        assert result == sentinel.user
 
         with pytest.raises(UserNotFound):
             UserServices(repo).get_by_email(email=email)
@@ -42,13 +42,13 @@ class TestUserServices:
     def test_get_by_username(self, mock_repo):
         repo = mock_repo()
         repo.get_by_username.side_effect = [
-            user_expected := User(username="admin"),
+            sentinel.user,
             None
         ]
 
         result = UserServices(
             repo).get_by_username(username="admin")
-        assert result == user_expected
+        assert result == sentinel.user
 
         with pytest.raises(UserNotFound):
             UserServices(repo).get_by_username(username="notexist")
@@ -61,17 +61,16 @@ class TestUserServices:
             password="testPassword1"
         )
         repo.get_by_email.side_effect = [
-            User(id=12),
+            sentinel.user,
             None,
             None
         ]
         repo.get_by_username.side_effect = [
-            User(id=12),
+            sentinel.user,
             None,
         ]
 
-        create_user = User(id=12)
-        repo.create.return_value = create_user
+        repo.create.return_value = sentinel.user
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).create(body=body)
@@ -79,7 +78,7 @@ class TestUserServices:
         with pytest.raises(UserDuplicate):
             UserServices(repo).create(body=body)
 
-        assert UserServices(repo).create(body=body) == create_user
+        assert UserServices(repo).create(body=body) == sentinel.user
 
     def test_update(self, mock_repo):
         body = UserUpdate(
@@ -91,8 +90,8 @@ class TestUserServices:
 
         repo.get.side_effect = [
             None,
-            User(id=12),
-            update_user := User(id=12)
+            sentinel.user,
+            sentinel.user
         ]
 
         with pytest.raises(UserNotFound):
@@ -100,14 +99,14 @@ class TestUserServices:
 
         repo.update.side_effect = [
             exc.IntegrityError(None, None, None),
-            update_user
+            sentinel.user
         ]
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).update(id=12, body=body)
 
         assert UserServices(repo).update(
-            id=12, body=body) == update_user
+            id=12, body=body) == sentinel.user
 
     @patch('app.services.users.verify_password')
     def test_authenticate(
@@ -118,11 +117,12 @@ class TestUserServices:
         email = "test@example.com"
         password = "testPassword1"
         wrong_password = "testPassword2"
+        sentinel.user = User()
 
         repo.get_by_email.side_effect = [
             None,
-            user := User(email=email),
-            user
+            sentinel.user,
+            sentinel.user
         ]
 
         mock_verify_password.side_effect = [False, True]
