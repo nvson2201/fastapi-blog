@@ -87,6 +87,7 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
             user_id=user.id
         )
 
+
         self.db.add(favorite_record)
         self.db.commit()
         self.db.refresh(favorite_record)
