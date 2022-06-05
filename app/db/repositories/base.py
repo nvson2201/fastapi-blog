@@ -40,8 +40,6 @@ class BaseRepository(
         self.db.add(obj)
         self.db.commit()
         self.db.refresh(obj)
-        print("CREATED USER HERE!")
-        # self.db.close()
         return obj
 
     def update(
@@ -55,10 +53,8 @@ class BaseRepository(
             if field in update_data:
                 setattr(obj, field, update_data[field])
 
-        # self.db.merge(obj)
+        self.db.merge(obj)
         self.db.commit()
-        # self.db.refresh(obj)
-        # self.db.close()
         return obj
 
     def remove(self, *, id: int) -> ModelType:

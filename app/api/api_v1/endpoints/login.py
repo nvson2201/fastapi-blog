@@ -60,7 +60,7 @@ def recover_password(
     try:
         login_services.recover_password(email=email)
     except UserNotFound:
-        HTTPException(
+        raise HTTPException(
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )
@@ -68,22 +68,21 @@ def recover_password(
     return {"msg": "Password recovery email sent"}
 
 
-@router.post("/reset-password/", response_model=schemas.Msg)
+@router.post("/reset-password", response_model=schemas.Msg)
 def reset_password(
-    token: str,
-    new_password: schemas.UserPassword,
+    reset_password: schemas.ResetPassword,
     login_services: LoginServices = Depends(get_login_services),
 ) -> Any:
     """
     Reset password
     """
     try:
-        login_services.recover_password(
-            token=token, new_password=new_password)
+        login_services.reset_password(
+            token=reset_password.token, new_password=reset_password.body)
     except InvalidToken:
         raise HTTPException(status_code=401, detail="Invalid token")
     except UserNotFound:
-        HTTPException(
+        raise HTTPException(
             status_code=404,
             detail="The user with this username does not exist in the system.",
         )

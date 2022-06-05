@@ -17,7 +17,7 @@ from app.services.users import UserServices
 router = APIRouter()
 
 
-@ router.get(
+@router.get(
     "/",
     response_model=List[schemas.UserInResponse],
     dependencies=[Depends(get_current_active_superuser)]
@@ -53,13 +53,13 @@ def create_user(
     Create new user by admin.
     """
     try:
+
         user = user_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
             detail="User with this email already exists"
         )
-
     return user
 
 

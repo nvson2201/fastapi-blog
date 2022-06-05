@@ -30,7 +30,7 @@ class LoginServices:
 
         if not user:
             raise UserIncorrectCredentials
-        elif not self.repository.is_active(user):
+        elif not self.user_services.is_active(user):
             raise UserInactive
 
         access_token_expires = timedelta(
@@ -60,7 +60,7 @@ class LoginServices:
     def reset_password(
         self,
         token: str,
-        new_password: schemas.UserPassword,
+        new_password: str,
     ) -> Any:
         id = verify_password_reset_token(token)
 
@@ -70,10 +70,10 @@ class LoginServices:
 
         if not user:
             raise UserNotFound
-        elif not self.repository.is_active(user):
+        elif not self.user_services.is_active(user):
             raise UserInactive
 
-        hashed_password = get_password_hash(new_password.body)
+        hashed_password = get_password_hash(new_password)
         user.hashed_password = hashed_password
 
         self.repository.update(id=user.id, body=user)

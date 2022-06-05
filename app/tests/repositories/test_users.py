@@ -1,167 +1,136 @@
-from sqlalchemy.orm import Session
-from fastapi.encoders import jsonable_encoder
+from mock_alchemy.mocking import UnifiedAlchemyMagicMock
+from app.config import settings
 
 from app.models import FollowersToFollowings, User
-from app.schemas.users import UserCreate, UserUpdate
+from app.schemas.users import UserInDB
 from app.db.repositories.users import UserRepository
-from app.utils.security import verify_password
-from app.tests.utils.utils import (
-    random_email, random_password, random_lower_string)
+from app.tests.utils.utils import random_password
+from app.tests.utils.users import random_user
+from app.utils.security import get_password_hash
 
 
 class TestUserRepository:
 
-    def test_get_user(self, user_repo: UserRepository,
-                      random_user: User) -> None:
-        user = random_user
-        user_2 = user_repo.get(id=user.id)
-        assert user_2
-        assert user.email == user_2.email
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+    def test_get_user(self) -> None:
+        id = 1
+        db = UnifiedAlchemyMagicMock()
 
-    def test_get_user_by_email(self, user_repo: UserRepository,
-                               random_user: User) -> None:
-        user = random_user
-        user_2 = user_repo.get_by_email(email=user.email)
-        assert user_2
-        assert user.email == user_2.email
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+        UserRepository(db).get(id=id)
 
-    def test_get_user_by_username(self, user_repo: UserRepository,
-                                  random_user: User) -> None:
-        user = random_user
-        user_2 = user_repo.get_by_username(username=user.username)
-        assert user_2
-        assert user.email == user_2.email
-        assert jsonable_encoder(user) == jsonable_encoder(user_2)
+        db.query.assert_called_once_with(User)
+        db.filter.assert_called_once_with(User.id == id)
 
-    def test_create_user(self, user_repo: UserRepository) -> None:
+    def test_get_user_by_email(self):
+        email = "nguyenvanson@gapo.com.vn"
+        db = UnifiedAlchemyMagicMock()
 
-        email = random_email()
-        password = random_password()
-        username = random_lower_string()
-        user_body = UserCreate(
-            email=email, password=password, username=username)
+        UserRepository(db).get_by_email(email=email)
 
-        user = user_repo.create(body=user_body)
-        assert user.email == email
-        assert hasattr(user, "hashed_password")
+        db.query.assert_called_once_with(User)
+        db.filter.assert_called_once_with(User.email == email)
 
-    def test_update_user(self, user_repo: UserRepository,
-                         random_user: User) -> None:
+    def test_get_user_by_username(self):
+        username = "admin"
+        db = UnifiedAlchemyMagicMock()
 
-        user = random_user
+        UserRepository(db).get_by_username(username=username)
 
-        new_password = random_password()
-        user_body_update = UserUpdate(password=new_password)
-        user_repo.update(user, body=user_body_update)
+        db.query.assert_called_once_with(User)
+        db.filter.assert_called_once_with(User.username == username)
 
-        user_2 = user_repo.get(id=user.id)
-        assert user_2
-        assert user.email == user_2.email
-        assert verify_password(new_password, user_2.hashed_password)
+    def test_create_user(self):
+        db = UnifiedAlchemyMagicMock()
 
-    def test_user_following_another_false(self, user_repo: UserRepository,
-                                          random_user: User) -> None:
-
-        target_user = random_user
-        requested_user = random_user
-
-        assert user_repo.is_user_following_for_another(
-            target_user=target_user,
-            requested_user=requested_user
-        ) is False
-
-    def test_add_user_into_followers(
-            self,
-            db: Session,
-            user_repo: UserRepository,
-            random_user: User
-    ) -> None:
-
-        target_user = random_user
-        requested_user = random_user
-
-        user_repo.add_user_into_followers(
-            target_user=target_user,
-            requested_user=requested_user
+        email = "nguyenvanson@gapo.com.vn"
+        hashed_password = get_password_hash("string11A")
+        username = "admin"
+        created_at = settings.current_time()
+        user_body = UserInDB(
+            email=email,
+            username=username,
+            hashed_password=hashed_password,
+            created_at=created_at,
+            updated_at=created_at,
         )
 
-        q = db.query(FollowersToFollowings)
-        q = q.filter(FollowersToFollowings.following_id == target_user.id)
-        q = q.filter(FollowersToFollowings.follower_id == requested_user.id)
+        UserRepository(db).create(body=user_body)
 
-        record = q.first()
+        db.add.assert_called()
+        db.refresh.assert_called()
+        db.commit.assert_called()
 
-        assert record is not None
+    def test_update_user(self):
+        db = UnifiedAlchemyMagicMock()
+        user = random_user()
 
-    def test_user_following_another_true(
-            self,
-            user_repo: UserRepository,
-            db: Session,
-            random_user: User
-    ) -> None:
+        user_body_update = UserInDB(
+            updated_at=settings.current_time(),
+            hashed_password=get_password_hash(random_password())
+        )
+        UserRepository(db).update(user, body=user_body_update)
 
-        target_user = random_user
-        requested_user = random_user
+        db.merge.assert_called()
+        db.commit.assert_called()
 
-        followers_to_followings_record = FollowersToFollowings()
-        followers_to_followings_record.follower_id = requested_user.id
-        followers_to_followings_record.following_id = target_user.id
-        db.add(followers_to_followings_record)
-        db.commit()
-        db.refresh(followers_to_followings_record)
+    def test_add_follower_to_following(self):
+        db = UnifiedAlchemyMagicMock()
 
-        assert user_repo.is_user_following_for_another(
+        target_user = random_user()
+        requested_user = random_user()
+
+        follower_to_following = FollowersToFollowings(
+            follower_id=requested_user.id,
+            following_id=target_user.id
+        )
+
+        UserRepository(db).add_follower_to_following(
+            follower_to_following=follower_to_following
+        )
+
+        db.add.assert_called_once_with(follower_to_following)
+        db.commit.assert_called_once_with()
+        db.refresh.assert_called_once_with(follower_to_following)
+
+    def test_user_following_another_true(self):
+        db = UnifiedAlchemyMagicMock()
+        target_user = random_user()
+        requested_user = random_user()
+
+        db.query.return_value.filter.return_value.first.side_effect = \
+            [FollowersToFollowings(
+                following_id=target_user.id,
+                follower_id=requested_user.id
+            )]
+
+        result = UserRepository(db).is_user_following_for_another(
             target_user=target_user,
             requested_user=requested_user,
-        ) is True
+        )
 
-    def test_check_if_user_is_active(self, user_repo: UserRepository) -> None:
+        db.query.assert_called_once_with(FollowersToFollowings)
+        db.filter.assert_called_once_with(
+            FollowersToFollowings.following_id == target_user.id,
+            FollowersToFollowings.follower_id == requested_user.id
+        )
 
-        email = random_email()
-        password = random_password()
-        username = random_lower_string()
-        user_body = UserCreate(
-            email=email, password=password, username=username)
+        assert result is True
 
-        user = user_repo.create(body=user_body)
-        is_active = user_repo.is_active(user)
-        assert is_active is True
+    def test_user_following_another_false(self):
+        db = UnifiedAlchemyMagicMock()
+        target_user = random_user()
+        requested_user = random_user()
 
-    def test_check_if_user_is_active_inactive(
-            self, user_repo: UserRepository
-    ) -> None:
+        db.query.return_value.filter.return_value.first.side_effect = [None]
 
-        email = random_email()
-        password = random_password()
-        username = random_lower_string()
-        user_body = UserCreate(email=email, password=password,
-                               is_active=True, username=username)
-        user = user_repo.create(body=user_body)
-        is_active = user_repo.is_active(user)
-        assert is_active
+        result = UserRepository(db).is_user_following_for_another(
+            target_user=target_user,
+            requested_user=requested_user,
+        )
 
-    def test_check_if_user_is_superuser(
-            self, user_repo: UserRepository) -> None:
+        db.query.assert_called_once_with(FollowersToFollowings)
+        db.filter.assert_called_once_with(
+            FollowersToFollowings.following_id == target_user.id,
+            FollowersToFollowings.follower_id == requested_user.id
+        )
 
-        email = random_email()
-        password = random_password()
-        username = random_lower_string()
-        user_body = UserCreate(email=email, password=password,
-                               is_superuser=True, username=username)
-        user = user_repo.create(body=user_body)
-        is_superuser = user_repo.is_superuser(user)
-        assert is_superuser is True
-
-    def test_check_if_user_is_superuser_normal_user(
-            self, user_repo: UserRepository) -> None:
-
-        email = random_email()
-        password = random_password()
-        username = random_lower_string()
-        user_body = UserCreate(
-            email=email, password=password, username=username)
-        user = user_repo.create(body=user_body)
-        is_superuser = user_repo.is_superuser(user)
-        assert is_superuser is False
+        assert result is False

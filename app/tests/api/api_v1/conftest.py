@@ -1,23 +1,66 @@
-from typing import Dict
+from unittest.mock import MagicMock
 
 import pytest
-
-from app.db.repositories.users import UserRepository
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
+
+from app.main import app
+from app.models.users import User
+from app.api.dependencies.services import get_user_services
+from app.api.dependencies.authentication import (
+    get_current_active_superuser, get_current_active_user)
 from app.config import settings
-from app.tests.utils.users import (
-    authentication_token_from_email, get_superuser_token_headers)
 
 
 @pytest.fixture(scope="class")
-def superuser_token_headers(client: TestClient) -> Dict[str, str]:
-    return get_superuser_token_headers(client)
+def client():
+    yield TestClient(app)
 
 
-@pytest.fixture(scope="class")
-def normal_user_token_headers(
-    client: TestClient, user_repo: UserRepository
-) -> Dict[str, str]:
-    return authentication_token_from_email(
-        user_repo=user_repo, client=client, email=settings.EMAIL_TEST_USER
+def super_user():
+    return User(
+        id=1,
+        is_active=True,
+        is_superuser=True,
+        email=settings.FIRST_SUPERUSER
     )
+
+
+@pytest.fixture(scope="class")
+def override_superuser():
+    app.dependency_overrides[get_current_active_superuser] = super_user
+    app.dependency_overrides[get_current_active_user] = super_user
+    yield
+    app.dependency_overrides = {}
+
+
+def permission_error():
+    raise HTTPException(
+        status_code=403,
+        detail="Not enough permissions"
+    )
+
+
+def normal_user():
+    return User(
+        id=1,
+        is_active=True,
+        is_superuser=False,
+        email=settings.EMAIL_TEST_USER
+    )
+
+
+@pytest.fixture(scope="class")
+def override_user():
+    app.dependency_overrides[get_current_active_user] = normal_user
+    app.dependency_overrides[get_current_active_superuser] = permission_error
+    yield
+    app.dependency_overrides = {}
+
+
+@pytest.fixture(scope="class")
+def user_services():
+    mock_user_services = MagicMock()
+    app.dependency_overrides[get_user_services] = lambda: mock_user_services
+    yield mock_user_services
+    app.dependency_overrides = {}
