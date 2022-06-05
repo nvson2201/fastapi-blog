@@ -1,83 +1,65 @@
-from app.models import User
-from app.schemas.posts import PostInDBCreate, PostUpdate
+from mock_alchemy.mocking import UnifiedAlchemyMagicMock
+from app.config import settings
 
+from app.models import Post
+from app.schemas.posts import PostInDB
 from app.db.repositories.posts import PostRepository
 from app.tests.utils.utils import random_lower_string
+from app.tests.utils.users import random_user
+from app.tests.utils.posts import random_post
 
 
 class TestPostRepository:
 
-    def test_create_post(
-        self,
-        random_user: User,
-        post_repo: PostRepository
-    ) -> None:
+    def test_get_post(self) -> None:
+        id = 1
+        db = UnifiedAlchemyMagicMock()
+
+        PostRepository(db).get(id=id)
+
+        db.query.assert_called_once_with(Post)
+        db.filter.assert_called_once_with(Post.id == id)
+
+    def test_create_post(self) -> None:
+        db = UnifiedAlchemyMagicMock()
         title = random_lower_string()
         body = random_lower_string()
-        user = random_user
-        post_body = PostInDBCreate(
+        created_at = settings.current_time()
+        updated_at = created_at
+        user = random_user()
+        post_body = PostInDB(
             title=title,
             body=body,
-            author_id=user.id)
-        post = post_repo.create(body=post_body)
+            author_id=user.id,
+            created_at=created_at,
+            updated_at=updated_at,
+            views=0
+        )
 
-        assert post.title == title
-        assert post.body == body
-        assert post.author_id == user.id
+        PostRepository(db).create(body=post_body)
 
-    def test_get_post(
-        self,
-        random_user: User,
-        post_repo: PostRepository
-    ) -> None:
-        title = random_lower_string()
-        body = random_lower_string()
-        user = random_user
-        post_body = PostInDBCreate(
-            title=title,
-            body=body,
-            author_id=user.id)
-        post = post_repo.create(body=post_body)
-        stored_post = post_repo.get(id=post.id)
-        assert stored_post
-        assert post.id == stored_post.id
-        assert post.title == stored_post.title
-        assert post.body == stored_post.body
-        assert post.author_id == stored_post.author_id
+        db.add.assert_called()
+        db.refresh.assert_called()
+        db.commit.assert_called()
 
-    def test_update_post(self, random_user: User,
-                         post_repo: PostRepository) -> None:
-        title = random_lower_string()
-        body = random_lower_string()
-        user = random_user
-        post_body = PostInDBCreate(
-            title=title,
-            body=body,
-            author_id=user.id)
-        post = post_repo.create(body=post_body)
+    def test_update_post(self) -> None:
+        db = UnifiedAlchemyMagicMock()
+        post = random_post()
+        post_body = PostInDB(
+            title=random_lower_string(),
+            body=random_lower_string()
+        )
 
-        body2 = random_lower_string()
-        post_update = PostUpdate(body=body2)
-        post2 = post_repo.update(post, body=post_update)
-        assert post.id == post2.id
-        assert post.title == post2.title
-        assert post2.body == body2
-        assert post.author_id == post2.author_id
+        PostRepository(db).update(post, body=post_body)
+        db.merge.assert_called()
+        db.commit.assert_called()
 
-    def test_delete_post(self, random_user: User,
-                         post_repo: PostRepository) -> None:
-        title = random_lower_string()
-        body = random_lower_string()
-        user = random_user
-        post_body = PostInDBCreate(
-            title=title,
-            body=body,
-            author_id=user.id)
-        post = post_repo.create(body=post_body)
-        post2 = post_repo.remove(id=post.id)
-        post3 = post_repo.get(id=post.id)
-        assert post3 is None
-        assert post2.id == post.id
-        assert post2.title == title
-        assert post2.body == body
-        assert post2.author_id == user.id
+    def test_delete_post(self) -> None:
+        db = UnifiedAlchemyMagicMock()
+        post = random_post()
+        db.query.return_value.get.side_effect = [post]
+
+        PostRepository(db).remove(id=post.id)
+        db.query.assert_called_once_with(Post)
+        db.delete.assert_called_once_with(post)
+        db.commit.assert_called_once_with()
