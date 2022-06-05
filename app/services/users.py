@@ -5,12 +5,13 @@ from sqlalchemy import exc
 from app.models.users import User
 from app.schemas import UserUpdate, UserCreate
 from app.schemas.datetime import DateTime
+from app.schemas.users import UserInDB
 
 from app.services.exceptions.users import (
     UserNotFound, UserDuplicate,
     UserInactive, UserNotSuper,
     UserForbiddenRegiser, UserIncorrectCredentials)
-from app.utils.security import verify_password
+from app.utils.security import get_password_hash, verify_password
 from app.utils.mail import send_new_account_email
 from app.config import settings
 
@@ -45,15 +46,26 @@ class UserServices:
         user = self.repository.get_by_email(email=body.email)
 
         if user:
-            raise UserDuplicate
+            raise UserDuplicate()
 
         user = self.repository.get_by_username(
             username=body.username)
 
         if user:
-            raise UserDuplicate
+            raise UserDuplicate()
 
-        user = self.repository.create(body=body)
+        body_dict = body.dict(exclude_unset=True)
+        hashed_password = get_password_hash(body_dict['password'])
+        created_at = settings.current_time()
+
+        create_data = UserInDB(
+            hashed_password=hashed_password,
+            created_at=created_at,
+            updated_at=created_at,
+            **body_dict
+        )
+
+        user = self.repository.create(body=create_data)
 
         if settings.EMAILS_ENABLED and body.email:
             send_new_account_email(
@@ -70,8 +82,19 @@ class UserServices:
         if not user:
             raise UserNotFound
 
+        body_dict = body.dict(exclude_unset=True)
+
+        if 'password' in body_dict:
+            hashed_password = get_password_hash(body_dict['password'])
+            body_dict['hashed_password'] = hashed_password
+            del body_dict['password']
+
+        update_data = UserInDB(
+            updated_at=settings.current_time(),
+            **body_dict
+        )
         try:
-            user = self.repository.update(user, body=body)
+            user = self.repository.update(user, body=update_data)
         except exc.IntegrityError:
             raise UserDuplicate
 
@@ -82,19 +105,7 @@ class UserServices:
         if not settings.USERS_OPEN_REGISTRATION:
             raise UserForbiddenRegiser
 
-        user = self.repository.get_by_email(email=body.email)
-
-        if user:
-            raise UserDuplicate
-
-        user = self.repository.create(body=body)
-
-        if settings.EMAILS_ENABLED and body.email:
-            send_new_account_email(
-                email_to=body.email,
-                username=body.email,
-                password=body.password
-            )
+        user = self.create(body=body)
 
         return user
 

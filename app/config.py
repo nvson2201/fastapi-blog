@@ -5,6 +5,7 @@ from pydantic import BaseSettings, EmailStr
 
 
 class Settings(BaseSettings):
+    PROJECT_NAME = "fastapi_blog"
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
     # 60 minutes * 24 hours * 8 days = 8 days
@@ -27,6 +28,8 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_USERNAME = "user1"
     FIRST_SUPERUSER_PASSWORD: str = "string11A"
     USERS_OPEN_REGISTRATION: bool = False
+
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS = 1
 
     DATABASE_URL = "mysql+mysqlconnector://test:test@localhost:3306/fastapi_blog"  # noqa
     GOOGLE_CLIENT_ID = "1041701496632-i22nqlha32dsjlasvhlk0spaj7k10cil.apps.googleusercontent.com"  # noqa

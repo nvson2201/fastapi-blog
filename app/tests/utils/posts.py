@@ -1,25 +1,20 @@
-from typing import Optional
-from app.db.repositories.posts import PostRepository
+import random
+from app.config import settings
 
 from app.models import Post
-from app.schemas.posts import PostInDBCreate
-from app.db.repositories.users import UserRepository
-from app.tests.utils.users import create_random_user
+from app.tests.utils.users import random_user
 from app.tests.utils.utils import random_lower_string
 
 
-def create_random_post(
-        user_repo: UserRepository, post_repo: PostRepository, *,
-        author_id: Optional[int] = None
-) -> Post:
+def random_post() -> Post:
+    user = random_user()
+    post = Post()
+    post.id = random.randint(1, 1000000)
+    post.views = 0
+    post.title = random_lower_string()
+    post.body = random_lower_string()
+    post.created_at = settings.current_time()
+    post.updated_at = user.created_at
+    post.author_id = user.id
 
-    if author_id is None:
-        user = create_random_user(user_repo)
-        author_id = user.id
-    title = random_lower_string()
-    body = random_lower_string()
-    post_body = PostInDBCreate(
-        title=title,
-        body=body,
-        author_id=author_id)
-    return post_repo.create(body=post_body)
+    return post

@@ -83,6 +83,10 @@ class UserInResponse(UserInDBBase):  # response_model
 class UserInDB(UserInDBBase):
     hashed_password: Optional[str] = None
 
+    # @property
+    # def created_at(self):
+    #     return settings.current_time()
+
 
 class UserPassword(BaseModel):
     body: str
@@ -104,3 +108,7 @@ class UserPassword(BaseModel):
                 'Password should have at least one lowercase letter')
 
         return v
+
+
+class ResetPassword(UserPassword):
+    token: str

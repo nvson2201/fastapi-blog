@@ -4,6 +4,7 @@ from app import schemas
 from app.db.repositories.users import UserRepository
 from app.db.repositories.posts import PostRepository
 from app.db.repositories.comments import CommentRepository
+from app.models.followers_to_followings import FollowersToFollowings
 from app.plugins.mysql import base  # noqa: F401
 from app.config import settings
 import random
@@ -52,9 +53,11 @@ def init_db(db: Session) -> None:
         user1 = random.choice(arr_users)
         for i in range(random.choice([i for i in range(1, 4)])):
             user2 = random.choice(arr_users)
-            users.add_user_into_followers(
-                target_user=user1,
-                requested_user=user2
+            users.add_follower_to_following(
+                FollowersToFollowings(
+                    follower_id=user2.id,
+                    following_id=user1.id
+                )
             )
 
     # Create 10 posts:

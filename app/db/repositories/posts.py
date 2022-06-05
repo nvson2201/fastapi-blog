@@ -5,10 +5,7 @@ from sqlalchemy import desc
 from app.db.repositories.base import BaseRepository
 from app.models.posts import Post
 from app.models import PostsToTags, Tag, Favorite, User
-from app.schemas.posts import (
-    PostCreate, PostUpdate,
-    PostInDB, PostInDBCreate, PostInDBUpdate)
-from app.config import settings
+from app.schemas.posts import PostCreate, PostUpdate
 from app.db.repositories.tags import TagRepository
 from app.models import FollowersToFollowings
 
@@ -19,23 +16,6 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
     def __init__(self, db):
         super().__init__(Post, db)
         self._tag_repo = TagRepository(db)
-
-    def create(self, *, body: PostInDBCreate) -> Post:
-        if isinstance(body, dict):
-            body_dict = body
-        else:
-            body_dict = body.dict(exclude_unset=True)
-
-        created_at = settings.current_time()
-
-        create_data = PostInDB(
-            views=0,
-            created_at=created_at,
-            updated_at=created_at,
-            **body_dict
-        )
-
-        return super().create(body=create_data)
 
     def get_multi(
         self, *, author_id: int, offset: int = 0, limit: int = 100
@@ -49,27 +29,8 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
 
         return posts
 
-    def update(
-        self,
-        post: Post, *, body: PostInDBUpdate
-    ) -> Post:
-        if isinstance(body, dict):
-            body_dict = body
-        else:
-            body_dict = body.dict(exclude_unset=True)
-
-        updated_at = settings.current_time()
-
-        update_data = PostInDB(
-            updated_at=updated_at,
-            **body_dict
-        )
-        return super().update(post, body=update_data)
-
     def update_views(self, id: Any):
-        q = self.db.query(Post)
-        q = q.filter(Post.id == id)
-        post = q.first()
+        post = self.db.query(Post).filter(Post.id == id).first()
         post.views = Post.views + 1
         self.db.commit()
         self.db.refresh(post)
@@ -77,19 +38,18 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         return post
 
     def get_tags_for_post_by_id(self, *, id) -> List[str]:
-        q = self.db.query(PostsToTags)
-        records = q.filter(PostsToTags.post_id == id)
-        tag_ids = [item.tag_id for item in records]
+        post_to_tags = self.db.query(PostsToTags).filter(
+            PostsToTags.post_id == id)
+        tag_ids = [item.tag_id for item in post_to_tags]
         tags_list = []
+
         for tag_id in tag_ids:
-            q = self.db.query(Tag)
-            tag = q.filter(Tag.id == tag_id).first()
+            tag = self.db.query(Tag).filter(Tag.id == tag_id).first()
             tags_list.append(tag.tag)
 
         return list(set(tags_list))
 
     def link_new_tags_to_post_by_id(self, *, id, tags: List[str]) -> None:
-
         tags = list(set(tags))
         self._tag_repo.create_tags_that_dont_exist(body=tags)
         for tag in tags:
@@ -109,44 +69,35 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         q = q.delete(synchronize_session='fetch')
         self.db.commit()
 
-    def get_favorites_count_for_post_by_id(
-            self, *, id
-    ) -> int:
-        q = self.db.query(Favorite).filter(Favorite.post_id == id)
-        favorites_count = q.count()
-        return favorites_count
+    def get_favorites_count_for_post_by_id(self, *, id) -> int:
+        return self.db.query(Favorite).filter(
+            Favorite.post_id == id).count()
 
     def is_post_favorited_by_user(self, *, post: Post, user: User) -> bool:
+        favorite = self.db.query(Favorite).filter(
+            Favorite.post_id == post.id,
+            Favorite.user_id == user.id
+        ).first()
 
-        q = self.db.query(Favorite)
-        q = q.filter(Favorite.post_id == post.id)
-
-        favorite_record = q.filter(Favorite.user_id == user.id).first()
-
-        if favorite_record:
-            return True
-        else:
-            return False
+        return bool(favorite)
 
     def add_post_into_favorites(self, *, post: Post, user: User) -> None:
-
-        favorite_record = Favorite()
-
-        favorite_record.post_id = post.id
-        favorite_record.user_id = user.id
+        favorite_record = Favorite(
+            post_id=post.id,
+            user_id=user.id
+        )
 
         self.db.add(favorite_record)
         self.db.commit()
         self.db.refresh(favorite_record)
 
     def delete_post_from_favorites(self, *, post: Post, user: User) -> None:
+        favorite = self.db.query(Favorite).filter(
+            Favorite.post_id == post.id,
+            Favorite.user_id == user.id
+        ).first()
 
-        q = self.db.query(Favorite)
-        q = q.filter(Favorite.post_id == post.id)
-
-        favorite_record = q.filter(Favorite.user_id == user.id).first()
-
-        self.db.delete(favorite_record)
+        self.db.delete(favorite)
         self.db.commit()
 
     def get_posts_for_feed(
@@ -174,26 +125,20 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         user_favorited: Optional[str] = None,
         limit: int = 20,
         offset: int = 0,
-        requested_user: Optional[User] = None,
     ) -> List[Post]:
         if tags:
-            q = self.db.query(Post).distinct()
-            q = q.where(Post.posts_to_tags)
-            q = q.filter(PostsToTags.tag.has(Tag.tag.in_(tags)))
+            q = self.db.query(Post).distinct().where(Post.posts_to_tags) \
+                .filter(PostsToTags.tag.has(Tag.tag.in_(tags)))
 
         if author:
-            q = q.where(User.posts)
-            q = q.filter(Post.author.has(User.username == author))
+            q = q.where(User.posts).filter(
+                Post.author.has(User.username == author))
 
         if user_favorited:
-            q = q.where(Post.favorites)
-            q = q.filter(Favorite.user.has(
+            q = q.where(Post.favorites).filter(Favorite.user.has(
                 User.username == user_favorited)
             )
 
-        q = q.limit(limit)
-        q = q.offset(offset)
+        q = q.limit(limit).offset(offset)
 
-        posts = q.all()
-
-        return posts
+        return q.all()

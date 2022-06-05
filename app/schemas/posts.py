@@ -18,17 +18,6 @@ class PostUpdate(BaseModel):
     tags: Optional[List[str]] = Field([], alias="tagList")
 
 
-class PostInDBCreate(BaseModel):
-    title: str
-    body: str
-    author_id: int
-
-
-class PostInDBUpdate(BaseModel):
-    title: Optional[str] = None
-    body: Optional[str] = None
-
-
 class PostInDB(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None

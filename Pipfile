@@ -51,6 +51,7 @@ loguru = "*"
 confluent-kafka = "*"
 pytest-cov = "*"
 pytest-mock = "*"
+mock-alchemy = "*"
 
 [dev-packages]
 flake8 = "*"

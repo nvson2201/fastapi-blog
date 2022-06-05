@@ -2,11 +2,11 @@ from typing import Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import exc
+from app.config import settings
 
 from app.schemas.posts import (
-    PostUpdate, PostCreate,
-    PostInResponse, ListOfPostsInResponse,
-    PostInDBCreate
+    PostInDB, PostUpdate, PostCreate,
+    PostInResponse, ListOfPostsInResponse
 )
 from app.models import User
 from app.plugins.kafka import producer
@@ -56,29 +56,34 @@ class PostServices:
         return post
 
     def update(self, *, id: str, body: PostUpdate, requested_user: User):
+        body_dict = body.dict(exclude_unset=True)
+        update_data = PostInDB(
+            updated_at=settings.current_time(),
+            **body_dict
+        )
 
         post_in_db = self.repository.get(id)
-
         if not post_in_db:
             raise PostNotFound
         try:
-            self.repository.update(post_in_db, body=body)
+            self.repository.update(post_in_db, body=update_data)
         except exc.IntegrityError:
             raise PostDuplicate
 
-        old_tags = list(
-            set(self.repository.get_tags_for_post_by_id(id=id)) -
-            set(body.tags)
-        )
+        if body.tags:
+            old_tags = list(
+                set(self.repository.get_tags_for_post_by_id(id=id)) -
+                set(body.tags)
+            )
 
-        new_tags = list(set(body.tags) - set(old_tags))
+            new_tags = list(set(body.tags) - set(old_tags))
 
-        self.remove_link_tags_to_post_by_id(
-            id=id, tags=old_tags
-        )
-        self.link_new_tags_to_post_by_id(
-            id=id, tags=new_tags
-        )
+            self.repository.remove_link_tags_to_post_by_id(
+                id=id, tags=old_tags
+            )
+            self.repository.link_new_tags_to_post_by_id(
+                id=id, tags=new_tags
+            )
 
         post_in_response = self.get(
             id=id, requested_user=requested_user
@@ -88,14 +93,18 @@ class PostServices:
 
     def create_with_owner(self, body: PostCreate, author_id: int):
 
-        body = jsonable_encoder(body)
+        body_dict = body.dict(exclude_unset=True)
 
-        post_in_db_create = PostInDBCreate(
-            **body, author_id=author_id
+        create_data = PostInDB(
+            views=0,
+            created_at=settings.current_time(),
+            updated_at=settings.current_time(),
+            author_id=author_id,
+            **body_dict
         )
 
         post_record = self.repository.create(
-            body=post_in_db_create
+            body=create_data
         )
 
         notification_message = {
@@ -141,8 +150,8 @@ class PostServices:
             user_favorited=user_favorited,
             limit=limit,
             offset=offset,
-            requested_user=requested_user
         )
+
         posts = [
             self.get(
                 id=post.id,

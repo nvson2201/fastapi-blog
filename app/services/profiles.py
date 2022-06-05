@@ -1,4 +1,5 @@
 from typing import Optional, Union
+from app.models.followers_to_followings import FollowersToFollowings
 
 from app.models.users import User
 from app.schemas import Profile, ProfileInResponse
@@ -69,9 +70,11 @@ class ProfileServices:
         if profile.following:
             raise UserIsAlreadyFollowed
 
-        self.repository.add_user_into_followers(
-            target_user=profile,
-            requested_user=requested_user
+        self.repository.add_follower_to_following(
+            FollowersToFollowings(
+                follower_id=requested_user.id,
+                following_id=profile.id
+            )
         )
 
         return ProfileInResponse(profile=profile.copy(
