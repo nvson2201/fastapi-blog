@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from app import models, schemas
 from app.api.dependencies.authentication import (
@@ -9,7 +9,8 @@ from app.api.dependencies.authentication import (
 )
 from app.api.dependencies.services import get_user_services
 from app.services.exceptions.users import (
-    UserNotFound, UserDuplicate, UserForbiddenRegiser
+    InvalidCode, UserLimitSendCode, UserNotFound, UserDuplicate,
+    UserNeedToWaitForNextVerify
 )
 from app.schemas.datetime import DateTime
 from app.services.users import UserServices
@@ -94,22 +95,17 @@ def read_user_me(
     return current_user
 
 
-@ router.post("/open", response_model=schemas.UserInResponse)
-def create_user_open(
+@router.post("/register", response_model=schemas.UserInResponse)
+def register(
     *,
     body: schemas.UserCreate,
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
     """
-    Create new user without the need to be logged in.
+    Register User
     """
     try:
-        user = user_services.create_user_open(body=body)
-    except UserForbiddenRegiser:
-        raise HTTPException(
-            status_code=403,
-            detail="Open user registration is forbidden on this server",
-        )
+        user = user_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
             status_code=409,
@@ -119,7 +115,62 @@ def create_user_open(
     return user
 
 
-@ router.get(
+@router.post(
+    "/{user_id}/send_code"
+)
+def send_code(
+    *,
+    user_id: int,
+    user_services: UserServices = Depends(get_user_services)
+) -> Any:
+    try:
+        user_services.send_code(user_id=user_id)
+    except UserNotFound:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+    except UserLimitSendCode:
+        raise HTTPException(
+            status_code=403,
+            detail="You need to wait 1 minutes for next send",
+        )
+
+    return {"msg": "Code successfully sent, please check your email"}
+
+
+@router.post(
+    "/{user_id}/verify-new-account"
+)
+def verify_new_account(
+    *,
+    user_id: int,
+    code_str: str = Body(...),
+    user_services: UserServices = Depends(get_user_services)
+) -> Any:
+    try:
+        user_services.verify_code_for_registers(
+            user_id=user_id, code_str=code_str)
+    except UserNotFound:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+    except UserNeedToWaitForNextVerify:
+        raise HTTPException(
+            status_code=403,
+            detail="You exceed 5 times failed to verify, plase wait 1 hours!",
+        )
+    except InvalidCode:
+        raise HTTPException(
+            status_code=401,
+            detail="Your code is incorrect!",
+        )
+
+    return {"msg": "Register successfully!"}
+
+
+@router.get(
     "/{user_id}",
     response_model=schemas.UserInResponse,
     dependencies=[Depends(get_current_active_user)]

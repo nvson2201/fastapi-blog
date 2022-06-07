@@ -12,10 +12,11 @@ class UserBase(BaseModel):
     username: Optional[str] = None
 
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
     email: EmailStr
     password: str
     username: str
+    full_name: Optional[str] = None
 
     @validator('full_name')
     def full_name_validator(cls, v):

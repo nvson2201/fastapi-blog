@@ -1,5 +1,6 @@
 import secrets
 import datetime
+from typing import Optional
 
 from pydantic import BaseSettings, EmailStr
 
@@ -12,6 +13,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
     EXPEIRATION_TIME_CACHE: int = 60 * 24 * 5
 
+    EMAIL_TEMPLATES_DIR = "/app/utils/email_templates/build"
+    SERVER_HOST = "http://localhost:8000/api/v1"
     DEFAULT_ARTICLES_LIMIT = 20
     DEFAULT_ARTICLES_OFFSET = 0
 
@@ -22,8 +25,16 @@ class Settings(BaseSettings):
     REDIS_PREFIX_POST = "post_id"
     REDIS_PREFIX_COMMENT = "comment_id"
 
-    EMAILS_ENABLED: bool = False
+    SMTP_TLS: bool = True
+    SMTP_PORT: Optional[int] = None
+    SMTP_HOST: Optional[str] = "http://localhost"
+    SMTP_USER: Optional[str] = "nguyenvanson"
+    SMTP_PASSWORD: Optional[str] = ""
+    EMAILS_ENABLED: bool = True
     EMAIL_TEST_USER: EmailStr = "test@example.com"  # type: ignore
+    EMAILS_FROM_NAME: str = "Nguyen Van Son"
+    EMAILS_FROM_EMAIL: str = "nguyenvanson@gapo.com.vn"
+
     FIRST_SUPERUSER: EmailStr = "nguyenvanson@gapo.com.vn"
     FIRST_SUPERUSER_USERNAME = "user1"
     FIRST_SUPERUSER_PASSWORD: str = "string11A"

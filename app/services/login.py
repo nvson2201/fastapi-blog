@@ -1,7 +1,6 @@
 from typing import Any
 from datetime import timedelta
 
-from app import schemas
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
     UserNotFound,
@@ -15,6 +14,7 @@ from app.utils.mail import (
 from app.utils import security
 from app.utils.security import get_password_hash
 from app.config import settings
+from app.schemas import UserInDB
 
 
 class LoginServices:
@@ -45,7 +45,7 @@ class LoginServices:
 
     def recover_password(self, email: str) -> Any:
         user = self.repository.get_by_email(email=email)
-
+        print("USER HERE", user)
         if not user:
             raise UserNotFound
 
@@ -62,19 +62,19 @@ class LoginServices:
         token: str,
         new_password: str,
     ) -> Any:
-        id = verify_password_reset_token(token)
-
-        if not id:
+        email = verify_password_reset_token(token)
+        print("EMAIL", email)
+        print(token)
+        if not email:
             raise InvalidToken
-        user = self.repository.get(id)
-
+        user = self.repository.get_by_email(email=email)
         if not user:
             raise UserNotFound
         elif not self.user_services.is_active(user):
             raise UserInactive
 
         hashed_password = get_password_hash(new_password)
-        user.hashed_password = hashed_password
-
-        self.repository.update(id=user.id, body=user)
+        print(user)
+        self.repository.update(user, body=UserInDB(
+            hashed_password=hashed_password))
         return {"msg": "Password updated successfully"}

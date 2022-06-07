@@ -9,6 +9,8 @@ from app.plugins.mysql import base  # noqa: F401
 from app.config import settings
 import random
 
+from app.utils.security import get_password_hash
+
 
 def init_db(db: Session) -> None:
     users = UserRepository(db)
@@ -25,24 +27,26 @@ def init_db(db: Session) -> None:
             k=random.choice([1, 2, 3])
         )))
 
-    user1 = users.get_by_email(email=settings.FIRST_SUPERUSER)
-    if not user1:
-        first_superuser = schemas.UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
-            username=settings.FIRST_SUPERUSER_USERNAME,
-            is_superuser=True,
-        )
-        user1 = users.create(body=first_superuser)
+    first_superuser = schemas.UserInDB(
+        created_at=settings.current_time(),
+        updated_at=settings.current_time(),
+        email=settings.FIRST_SUPERUSER,
+        hashed_password=get_password_hash(settings.FIRST_SUPERUSER_PASSWORD),
+        username=settings.FIRST_SUPERUSER_USERNAME,
+        is_superuser=True,
+    )
+    user1 = users.create(body=first_superuser)
     # Create 10 users:
     arr_users = [user1]
     for i in range(2, 11):
         email = f"user{str(i)}@gmail.com"
         password = "123456aA"
         username = "user{}".format(i)
-        user = schemas.UserCreate(
+        user = schemas.UserInDB(
+            created_at=settings.current_time(),
+            updated_at=settings.current_time(),
             email=email,
-            password=password,
+            hashed_password=get_password_hash(password),
             username=username,
         )
         new_user = users.create(body=user)
@@ -54,7 +58,7 @@ def init_db(db: Session) -> None:
         for i in range(random.choice([i for i in range(1, 4)])):
             user2 = random.choice(arr_users)
             users.add_follower_to_following(
-                FollowersToFollowings(
+                follower_to_following=FollowersToFollowings(
                     follower_id=user2.id,
                     following_id=user1.id
                 )
@@ -66,10 +70,11 @@ def init_db(db: Session) -> None:
         title = "post {}".format(i)
         body = "This is a post {}".format(i)
 
-        post = schemas.PostInDBCreate(
+        post = schemas.PostInDB(
             title=title,
             body=body,
-            author_id=get_random_number()
+            author_id=get_random_number(),
+            views=0
         )
         post = posts.create(body=post)
 

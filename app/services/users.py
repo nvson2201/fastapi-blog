@@ -1,6 +1,4 @@
-from typing import List, Optional
-
-from sqlalchemy import exc
+from typing import List, Optional, Union
 
 from app.models.users import User
 from app.schemas import UserUpdate, UserCreate
@@ -8,9 +6,9 @@ from app.schemas.datetime import DateTime
 from app.schemas.users import UserInDB
 
 from app.services.exceptions.users import (
-    UserNotFound, UserDuplicate,
-    UserInactive, UserNotSuper,
-    UserForbiddenRegiser, UserIncorrectCredentials)
+    InvalidCode, UserLimitSendCode,
+    UserNotFound, UserDuplicate, UserNeedToWaitForNextVerify,
+    UserInactive, UserNotSuper, UserIncorrectCredentials)
 from app.utils.security import get_password_hash, verify_password
 from app.utils.mail import send_new_account_email
 from app.config import settings
@@ -20,6 +18,19 @@ class UserServices:
 
     def __init__(self, repository):
         self.repository = repository
+
+    def _check_duplicate_user(self, *, body: Union[UserCreate, UserUpdate]):
+        if body.email:
+            user = self.repository.get_by_email(email=body.email)
+
+            if user:
+                raise UserDuplicate()
+
+        if body.username:
+            user = self.repository.get_by_username(username=body.username)
+
+            if user:
+                raise UserDuplicate()
 
     def get(self, id: str) -> User:
         user = self.repository.get(id)
@@ -43,16 +54,7 @@ class UserServices:
         return user
 
     def create(self, body: UserCreate) -> User:
-        user = self.repository.get_by_email(email=body.email)
-
-        if user:
-            raise UserDuplicate()
-
-        user = self.repository.get_by_username(
-            username=body.username)
-
-        if user:
-            raise UserDuplicate()
+        self._check_duplicate_user(body=body)
 
         body_dict = body.dict(exclude_unset=True)
         hashed_password = get_password_hash(body_dict['password'])
@@ -66,14 +68,7 @@ class UserServices:
         )
 
         user = self.repository.create(body=create_data)
-
-        if settings.EMAILS_ENABLED and body.email:
-            send_new_account_email(
-                email_to=body.email,
-                username=body.email,
-                password=body.password
-            )
-
+        self.send_code(user_id=user.id)
         return user
 
     def update(self, id: str, body: UserUpdate) -> User:
@@ -81,6 +76,8 @@ class UserServices:
 
         if not user:
             raise UserNotFound
+
+        self._check_duplicate_user(body=body)
 
         body_dict = body.dict(exclude_unset=True)
 
@@ -93,19 +90,7 @@ class UserServices:
             updated_at=settings.current_time(),
             **body_dict
         )
-        try:
-            user = self.repository.update(user, body=update_data)
-        except exc.IntegrityError:
-            raise UserDuplicate
-
-        return user
-
-    def create_user_open(self, body: UserCreate) -> User:
-
-        if not settings.USERS_OPEN_REGISTRATION:
-            raise UserForbiddenRegiser
-
-        user = self.create(body=body)
+        user = self.repository.update(user, body=update_data)
 
         return user
 
@@ -152,3 +137,41 @@ class UserServices:
         if not user.is_superuser:
             raise UserNotSuper
         return user
+
+    def verify_code_for_registers(self, *, user_id,  code_str):
+        user = self.repository.get(user_id)
+        if not user:
+            raise UserNotFound
+        code = self.repository.get_code_of_user(user=user)
+
+        if self.repository.check_time_fail(code=code):
+            raise UserNeedToWaitForNextVerify
+
+        if self.repository.check_limit_fails(code=code):
+            raise UserNeedToWaitForNextVerify
+
+        if code.body != code_str:
+            self.repository.update_code_fails(code=code)
+            raise InvalidCode
+
+        self.repository.active_user(user=user)
+
+    def send_code(self, *, user_id):
+
+        user = self.repository.get(user_id)
+        if not user:
+            raise UserNotFound
+
+        code = self.repository.get_code_of_user(user=user)
+        print(code)
+        if not code:
+            code = self.repository.create_code(user=user)
+
+        code = self.repository.update_code(code=code)
+        print(code)
+        if self.repository.check_time_send(code=code):
+            raise UserLimitSendCode
+
+        send_new_account_email(email_to=user.email, signup_code=code.body)
+
+        self.repository.set_time_send(code=code)

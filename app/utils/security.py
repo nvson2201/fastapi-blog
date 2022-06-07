@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Any, Union
+import random
+import string
+
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -34,3 +37,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
+
+def generate_code():
+    return "".join(random.choices(string.digits, k=6))

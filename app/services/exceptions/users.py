@@ -28,3 +28,15 @@ class UserNotSuper(Exception):
 
 class UserIncorrectCredentials(Exception):
     pass
+
+
+class UserLimitSendCode(Exception):
+    pass
+
+
+class InvalidCode(Exception):
+    pass
+
+
+class UserNeedToWaitForNextVerify(Exception):
+    pass

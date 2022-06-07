@@ -15,7 +15,7 @@ def upgrade():
         sa.Column('username', sa.String(length=50), nullable=False)
     ),
     op.create_index(op.f('ix_user_username'), 'users',
-                    ['username'], unique=True)
+                    ['username'], unique=False)
 
 
 def downgrade():

@@ -1,14 +1,17 @@
 from typing import List
 from typing import Optional, Union
+import datetime
 
 from app.schemas.users import UserCreate, UserUpdate
 from app.schemas.profiles import Profile
 from app.schemas.datetime import DateTime
 from app.models.users import User
+from app.models.codes import Code
 from app.models.followers_to_followings import FollowersToFollowings
 from app.services.exceptions.profile import UserIsNotFollowed
 from app.db.repositories.base import BaseRepository
 from app.config import settings
+from app.utils.security import generate_code
 
 
 class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
@@ -95,4 +98,76 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
             raise UserIsNotFollowed
 
         self.db.delete(follower_to_following)
+        self.db.commit()
+
+    def create_code(self, *, user):
+        code_in_db = Code(
+            body=generate_code(),
+            fails=0,
+            time_lock_send_code=None,
+            time_lock_fail=None,
+            user_id=user.id,
+        )
+        self.db.add(code_in_db)
+        self.db.commit()
+        self.db.refresh(code_in_db)
+
+        return code_in_db
+
+    def update_code(self, *, code):
+        code.body = generate_code()
+        self.db.merge(code)
+        self.db.commit()
+        return code
+
+    def get_code_of_user(self, *, user):
+        return self.db.query(Code).filter(
+            Code.user_id == user.id
+        ).first()
+
+    def update_code_fails(self, *, code):
+        code.fails = Code.fails + 1
+        self.db.commit()
+        self.db.refresh(code)
+
+    def check_limit_fails(self, *, code):
+        if code.fails == 5:
+            self._set_time_fail(code=code)
+
+            return True
+        return False
+
+    def _set_time_fail(self, *, code):
+        code.time_lock_fail = settings.current_time()
+        self.db.commit()
+        self.db.refresh(code)
+
+    def check_time_fail(self, *,  code):
+        if not code.time_lock_fail:
+            return False
+
+        if code.time_lock_fail + datetime.timedelta(hours=1) > \
+                settings.current_time():
+            return True
+        else:
+            code.fails = 0
+            self.db.commit()
+            self.db.refresh(code)
+            return False
+
+    def set_time_send(self, *, code):
+        code.time_lock_send_code = settings.current_time()
+        self.db.commit()
+        self.db.refresh(code)
+
+    def check_time_send(self, *, code):
+        if not code.time_lock_send_code:
+            self.set_time_send(code=code)
+            return False
+        return code.time_lock_send_code + datetime.timedelta(seconds=6) > \
+            settings.current_time()
+
+    def active_user(self, *, user):
+        user.is_active = True
+        self.db.merge(user)
         self.db.commit()
