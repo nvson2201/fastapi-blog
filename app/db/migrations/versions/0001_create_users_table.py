@@ -24,7 +24,7 @@ def upgrade():
         sa.PrimaryKeyConstraint('id')
     )
 
-    op.create_index(op.f('ix_user_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_user_email'), 'users', ['email'], unique=False)
     op.create_index(op.f('ix_user_full_name'), 'users',
                     ['full_name'], unique=False)
     op.create_index(op.f('ix_user_id'), 'users', ['id'], unique=False)

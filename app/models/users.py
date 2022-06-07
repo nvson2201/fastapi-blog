@@ -15,12 +15,12 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     full_name = Column((String(50)), index=True)
-    email = Column((String(255)), unique=True, index=True, nullable=False)
-    username = Column((String(255)), unique=True, index=True, nullable=False)
+    email = Column((String(255)), index=True, nullable=False)
+    username = Column((String(255)), index=True, nullable=False)
     hashed_password = Column((String(225)), nullable=False)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    is_active = Column(Boolean(), default=True)
+    is_active = Column(Boolean(), default=False)
     is_superuser = Column(Boolean(), default=False)
     is_banned = Column(Boolean(), default=False)
 
@@ -30,6 +30,8 @@ class User(Base):
         "Comment", back_populates="author", cascade="all,delete")
     favorites = relationship(
         "Favorite", back_populates="user", cascade="all,delete")
+    code = relationship(
+        "Code", back_populates="user", cascade="all,delete")
     # follower = relationship(
     #     "FollowersToFollowings",
     #     back_populates="following", cascade="all,delete")

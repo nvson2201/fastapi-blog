@@ -14,6 +14,7 @@ class AuthenticationService:
 
     def get_current_user(self, token: str) -> User:
         try:
+            print(token)
             payload = jwt.decode(
                 token, settings.SECRET_KEY,
                 algorithms=[security.ALGORITHM]

@@ -6,3 +6,4 @@ from .posts_to_tags import PostsToTags  # noqa
 from .tags import Tag  # noqa
 from .followers_to_followings import FollowersToFollowings  # noqa
 from .notifications import Notification  # noqa
+from .codes import Code  # noqa

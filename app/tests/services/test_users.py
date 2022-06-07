@@ -1,7 +1,6 @@
 from unittest.mock import patch, sentinel
 
 import pytest
-from sqlalchemy import exc
 
 from app.models import User
 from app.schemas.users import UserCreate, UserUpdate
@@ -50,7 +49,9 @@ class TestUserServices:
         with pytest.raises(UserNotFound):
             UserServices(repo).get_by_username(username="notexist")
 
-    def test_create(self, repo):
+    @patch.object(UserServices, 'send_code', autospec=True)
+    def test_create(self, send_code, repo):
+        sentinel.user = User()
         body = UserCreate(
             username="test",
             email="test@example.com",
@@ -59,28 +60,33 @@ class TestUserServices:
         repo.get_by_email.side_effect = [None]
         repo.get_by_username.side_effect = [None]
         repo.create.return_value = sentinel.user
+        send_code.side_effect = [None]
 
         assert UserServices(repo).create(body=body) == sentinel.user
 
     def test_create_user_same_email(self, repo):
+        sentinel.user
         body = UserCreate(
             username="test",
             email="test@example.com",
             password="testPassword1"
         )
-        repo.get_by_email.side_effect = [sentinel.user]
+        repo.get_by_email.return_value = sentinel.user
+        sentinel.user.is_active = True
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).create(body=body)
 
     def test_create_user_same_username(self, repo):
+        sentinel.user = User()
         body = UserCreate(
             username="test",
             email="test@example.com",
             password="testPassword1"
         )
-        repo.get_by_email.side_effect = [None]
-        repo.get_by_username.side_effect = [sentinel.user]
+        repo.get_by_email.return_value = None
+        repo.get_by_username.return_value = sentinel.user
+        sentinel.user.is_active = True
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).create(body=body)
@@ -93,6 +99,8 @@ class TestUserServices:
         )
         repo.get.side_effect = [sentinel.user]
         repo.update.side_effect = [sentinel.user]
+        repo.get_by_email.side_effect = [None]
+        repo.get_by_username.side_effect = [None]
 
         assert UserServices(repo).update(
             id=12, body=body) == sentinel.user
@@ -116,7 +124,6 @@ class TestUserServices:
         )
 
         repo.get.side_effect = [sentinel.user]
-        repo.update.side_effect = [exc.IntegrityError(None, None, None)]
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).update(id=12, body=body)
