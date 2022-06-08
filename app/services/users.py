@@ -122,39 +122,13 @@ class UserServices:
             raise UserNotSuper
         return user
 
-    def verify_code_for_registers(self, *, user_id,  code_str):
+    async def upload_user_avatar(self, *, user_id, file):
         user = self.repository.get(user_id)
         if not user:
             raise UserNotFound
 
-        if self.repository.check_time_fail(code=code):
-            raise UserNeedToWaitForNextVerify
+        filename = await upload_avatar(file)
+        if not filename:
+            raise ExtensionNotSupport
 
-        if self.repository.check_limit_fails(code=code):
-            raise UserNeedToWaitForNextVerify
-
-        if code.body != code_str:
-            self.repository.update_code_fails(code=code)
-            raise InvalidCode
-
-        self.repository.active_user(user=user)
-
-    def send_code(self, *, user_id):
-
-        user = self.repository.get(user_id)
-        if not user:
-            raise UserNotFound
-
-        code = self.repository.get_code_of_user(user=user)
-        print(code)
-        if not code:
-            code = self.repository.create_code(user=user)
-
-        code = self.repository.update_code(code=code)
-        print(code)
-        if self.repository.check_time_send(code=code):
-            raise UserLimitSendCode
-
-        send_new_account_email(email_to=user.email, signup_code=code.body)
-
-        self.repository.set_time_send(code=code)
+        self.repository.upload_user_avatar(user=user, filename=filename)
