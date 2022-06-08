@@ -1,18 +1,18 @@
-from typing import Any
+from typing import Any, Optional
 from datetime import timedelta
+
+from app.models.users import User
 
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
-    UserNotFound,
-    UserInactive,
-    UserIncorrectCredentials)
+    UserNotFound, UserBanned, UserIncorrectCredentials)
 from app.utils.mail import (
     generate_password_reset_token,
     send_reset_password_email,
     verify_password_reset_token,
 )
 from app.utils import security
-from app.utils.security import get_password_hash
+from app.utils.security import get_password_hash, verify_password
 from app.config import settings
 from app.schemas import UserInDB
 
@@ -22,16 +22,29 @@ class LoginServices:
         self.repository = repository
         self.user_services = user_services
 
+    def authenticate(
+            self, *,
+            email: str,
+            password: str
+    ) -> Optional[User]:
+
+        user = self.repository.get_by_email(email=email)
+        if not user:
+            raise UserNotFound
+        if not verify_password(password, user.hashed_password):
+            raise UserIncorrectCredentials
+        return user
+
     def login_access_token(self, email: str, password: str) -> Any:
-        user = self.user_services.authenticate(
+        user = self.authenticate(
             email=email,
             password=password
         )
 
         if not user:
             raise UserIncorrectCredentials
-        elif not self.user_services.is_active(user):
-            raise UserInactive
+        elif user.is_banned:
+            raise UserBanned
 
         access_token_expires = timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -45,7 +58,6 @@ class LoginServices:
 
     def recover_password(self, email: str) -> Any:
         user = self.repository.get_by_email(email=email)
-        print("USER HERE", user)
         if not user:
             raise UserNotFound
 
@@ -63,18 +75,13 @@ class LoginServices:
         new_password: str,
     ) -> Any:
         email = verify_password_reset_token(token)
-        print("EMAIL", email)
-        print(token)
         if not email:
             raise InvalidToken
         user = self.repository.get_by_email(email=email)
         if not user:
             raise UserNotFound
-        elif not self.user_services.is_active(user):
-            raise UserInactive
 
         hashed_password = get_password_hash(new_password)
-        print(user)
         self.repository.update(user, body=UserInDB(
             hashed_password=hashed_password))
         return {"msg": "Password updated successfully"}

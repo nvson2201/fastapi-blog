@@ -14,10 +14,11 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column((String(50)), index=True)
     email = Column((String(255)), index=True, nullable=False)
     username = Column((String(255)), index=True, nullable=False)
     hashed_password = Column((String(225)), nullable=False)
+    full_name = Column((String(50)), nullable=True)
+    avatar = Column((String(255)), nullable=True)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     is_active = Column(Boolean(), default=False)

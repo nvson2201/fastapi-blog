@@ -171,3 +171,8 @@ class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
         user.is_active = True
         self.db.merge(user)
         self.db.commit()
+
+    def upload_user_avatar(self, user, filename):
+        user.avatar = filename
+        self.db.merge(user)
+        self.db.commit()

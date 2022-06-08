@@ -6,11 +6,10 @@ from app.schemas.datetime import DateTime
 from app.schemas.users import UserInDB
 
 from app.services.exceptions.users import (
-    InvalidCode, UserLimitSendCode,
-    UserNotFound, UserDuplicate, UserNeedToWaitForNextVerify,
-    UserInactive, UserNotSuper, UserIncorrectCredentials)
-from app.utils.security import get_password_hash, verify_password
-from app.utils.mail import send_new_account_email
+    ExtensionNotSupport, UserInactive, UserNotFound,
+    UserDuplicate, UserNotSuper)
+from app.utils.security import get_password_hash
+from app.utils.upload_avatar import upload_avatar
 from app.config import settings
 
 
@@ -22,13 +21,11 @@ class UserServices:
     def _check_duplicate_user(self, *, body: Union[UserCreate, UserUpdate]):
         if body.email:
             user = self.repository.get_by_email(email=body.email)
-
             if user:
                 raise UserDuplicate()
 
         if body.username:
             user = self.repository.get_by_username(username=body.username)
-
             if user:
                 raise UserDuplicate()
 
@@ -68,7 +65,7 @@ class UserServices:
         )
 
         user = self.repository.create(body=create_data)
-        self.send_code(user_id=user.id)
+
         return user
 
     def update(self, id: str, body: UserUpdate) -> User:
@@ -115,19 +112,6 @@ class UserServices:
 
         return users
 
-    def authenticate(
-            self, *,
-            email: str,
-            password: str
-    ) -> Optional[User]:
-
-        user = self.get_by_email(email=email)
-        if not user:
-            raise UserNotFound
-        if not verify_password(password, user.hashed_password):
-            raise UserIncorrectCredentials
-        return user
-
     def is_active(self, user: User) -> bool:
         if not user.is_active:
             raise UserInactive
@@ -138,40 +122,13 @@ class UserServices:
             raise UserNotSuper
         return user
 
-    def verify_code_for_registers(self, *, user_id,  code_str):
-        user = self.repository.get(user_id)
-        if not user:
-            raise UserNotFound
-        code = self.repository.get_code_of_user(user=user)
-
-        if self.repository.check_time_fail(code=code):
-            raise UserNeedToWaitForNextVerify
-
-        if self.repository.check_limit_fails(code=code):
-            raise UserNeedToWaitForNextVerify
-
-        if code.body != code_str:
-            self.repository.update_code_fails(code=code)
-            raise InvalidCode
-
-        self.repository.active_user(user=user)
-
-    def send_code(self, *, user_id):
-
+    async def upload_user_avatar(self, *, user_id, file):
         user = self.repository.get(user_id)
         if not user:
             raise UserNotFound
 
-        code = self.repository.get_code_of_user(user=user)
-        print(code)
-        if not code:
-            code = self.repository.create_code(user=user)
+        filename = await upload_avatar(file)
+        if not filename:
+            raise ExtensionNotSupport
 
-        code = self.repository.update_code(code=code)
-        print(code)
-        if self.repository.check_time_send(code=code):
-            raise UserLimitSendCode
-
-        send_new_account_email(email_to=user.email, signup_code=code.body)
-
-        self.repository.set_time_send(code=code)
+        self.repository.upload_user_avatar(user=user, filename=filename)
