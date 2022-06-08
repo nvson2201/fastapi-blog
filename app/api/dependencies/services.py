@@ -10,6 +10,7 @@ from app.services.login import LoginServices
 from app.services.posts import PostServices
 from app.services.profiles import ProfileServices
 from app.services.users import UserServices
+from app.services.register import RegisterServices
 
 
 def get_user_services(
@@ -40,6 +41,15 @@ def get_login_services(
 ):
     return LoginServices(repository=user_redis_repo,
                          user_services=user_services)
+
+
+def get_register_services(
+    user_redis_repo=Depends(get_redis_repo(
+        UserRedisRepository, UserRepository)),
+    user_services=Depends(get_user_services)
+):
+    return RegisterServices(repository=user_redis_repo,
+                            user_services=user_services)
 
 
 def get_post_services(

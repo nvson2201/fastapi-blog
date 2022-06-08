@@ -40,3 +40,11 @@ class InvalidCode(Exception):
 
 class UserNeedToWaitForNextVerify(Exception):
     pass
+
+
+class UserBanned(Exception):
+    pass
+
+
+class ExtensionNotSupport(Exception):
+    pass

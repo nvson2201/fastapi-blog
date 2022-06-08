@@ -10,6 +10,7 @@ class UserBase(BaseModel):
     is_superuser: bool = False
     full_name: Optional[str] = None
     username: Optional[str] = None
+    avatar: Optional[str] = None
 
 
 class UserCreate(BaseModel):

@@ -8,7 +8,8 @@ from app.api.dependencies import authentication
 from app.api.dependencies.services import get_login_services
 from app.services.exceptions.tokens import InvalidToken
 from app.services.exceptions.users import (
-    UserNotFound, UserInactive, UserIncorrectCredentials)
+    UserInactive, UserIncorrectCredentials, UserNotFound,
+)
 from app.services.login import LoginServices
 
 router = APIRouter()

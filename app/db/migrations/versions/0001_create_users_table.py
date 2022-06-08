@@ -14,11 +14,9 @@ def upgrade():
     op.create_table(
         'users',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('full_name', sa.String(
-            length=50), nullable=True),
+        sa.Column('full_name', sa.String(length=50), nullable=True),
         sa.Column('email', sa.String(length=255), nullable=False),
-        sa.Column('hashed_password', sa.String(
-            length=225), nullable=False),
+        sa.Column('hashed_password', sa.String(length=225), nullable=False),
         sa.Column('is_active', sa.Boolean(), nullable=True),
         sa.Column('is_superuser', sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint('id')

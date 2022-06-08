@@ -1,16 +1,16 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import (
+    APIRouter, Depends, HTTPException, File, UploadFile
+)
 
 from app import models, schemas
 from app.api.dependencies.authentication import (
-    get_current_active_superuser,
-    get_current_active_user,
+    get_current_active_superuser, get_current_active_user,
 )
 from app.api.dependencies.services import get_user_services
 from app.services.exceptions.users import (
-    InvalidCode, UserLimitSendCode, UserNotFound, UserDuplicate,
-    UserNeedToWaitForNextVerify
+    UserNotFound, UserDuplicate,
 )
 from app.schemas.datetime import DateTime
 from app.services.users import UserServices
@@ -45,7 +45,7 @@ def read_users(
     response_model=schemas.UserInResponse,
     dependencies=[Depends(get_current_active_superuser)]
 )
-def create_user(
+async def create_user(
     *,
     body: schemas.UserCreate,
     user_services: UserServices = Depends(get_user_services)
@@ -54,7 +54,6 @@ def create_user(
     Create new user by admin.
     """
     try:
-
         user = user_services.create(body=body)
     except UserDuplicate:
         raise HTTPException(
@@ -95,81 +94,6 @@ def read_user_me(
     return current_user
 
 
-@router.post("/register", response_model=schemas.UserInResponse)
-def register(
-    *,
-    body: schemas.UserCreate,
-    user_services: UserServices = Depends(get_user_services)
-) -> Any:
-    """
-    Register User
-    """
-    try:
-        user = user_services.create(body=body)
-    except UserDuplicate:
-        raise HTTPException(
-            status_code=409,
-            detail="User with this email already exists"
-        )
-
-    return user
-
-
-@router.post(
-    "/{user_id}/send_code"
-)
-def send_code(
-    *,
-    user_id: int,
-    user_services: UserServices = Depends(get_user_services)
-) -> Any:
-    try:
-        user_services.send_code(user_id=user_id)
-    except UserNotFound:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
-    except UserLimitSendCode:
-        raise HTTPException(
-            status_code=403,
-            detail="You need to wait 1 minutes for next send",
-        )
-
-    return {"msg": "Code successfully sent, please check your email"}
-
-
-@router.post(
-    "/{user_id}/verify-new-account"
-)
-def verify_new_account(
-    *,
-    user_id: int,
-    code_str: str = Body(...),
-    user_services: UserServices = Depends(get_user_services)
-) -> Any:
-    try:
-        user_services.verify_code_for_registers(
-            user_id=user_id, code_str=code_str)
-    except UserNotFound:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found",
-        )
-    except UserNeedToWaitForNextVerify:
-        raise HTTPException(
-            status_code=403,
-            detail="You exceed 5 times failed to verify, plase wait 1 hours!",
-        )
-    except InvalidCode:
-        raise HTTPException(
-            status_code=401,
-            detail="Your code is incorrect!",
-        )
-
-    return {"msg": "Register successfully!"}
-
-
 @router.get(
     "/{user_id}",
     response_model=schemas.UserInResponse,
@@ -193,7 +117,7 @@ def read_user_by_id(
     return user
 
 
-@ router.put(
+@router.put(
     "/{user_id}",
     response_model=schemas.UserInResponse,
     dependencies=[Depends(get_current_active_superuser)]
@@ -221,3 +145,24 @@ def update_user(
         )
 
     return user
+
+
+@router.put(
+    "/{user_id}/avatar/",
+    dependencies=[Depends(get_current_active_superuser)]
+)
+async def upload_avatar(
+    *,
+    user_id,
+    file: UploadFile = File(...),
+    user_services: UserServices = Depends(get_user_services)
+):
+    try:
+        await user_services.upload_user_avatar(user_id=user_id, file=file)
+    except UserNotFound:
+        raise HTTPException(
+            status_code=400,
+            detail="Only Support PNG, JPG, JPEG extention images",
+        )
+
+    return {"msg": "Upload avatar successfully!"}

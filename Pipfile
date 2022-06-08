@@ -52,6 +52,8 @@ confluent-kafka = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 mock-alchemy = "*"
+pillow = "*"
+aiofiles = "*"
 
 [dev-packages]
 flake8 = "*"

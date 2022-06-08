@@ -6,7 +6,7 @@ from app.models import User
 from app.schemas.users import UserCreate, UserUpdate
 from app.services.users import UserServices
 from app.services.exceptions.users import (
-    UserDuplicate, UserIncorrectCredentials, UserNotFound)
+    UserDuplicate, UserNotFound)
 
 
 @patch('app.db.repositories_cache.users.UserRedisRepository')
@@ -49,8 +49,7 @@ class TestUserServices:
         with pytest.raises(UserNotFound):
             UserServices(repo).get_by_username(username="notexist")
 
-    @patch.object(UserServices, 'send_code', autospec=True)
-    def test_create(self, send_code, repo):
+    def test_create(self, repo):
         sentinel.user = User()
         body = UserCreate(
             username="test",
@@ -60,7 +59,6 @@ class TestUserServices:
         repo.get_by_email.side_effect = [None]
         repo.get_by_username.side_effect = [None]
         repo.create.return_value = sentinel.user
-        send_code.side_effect = [None]
 
         assert UserServices(repo).create(body=body) == sentinel.user
 
@@ -127,42 +125,6 @@ class TestUserServices:
 
         with pytest.raises(UserDuplicate):
             UserServices(repo).update(id=12, body=body)
-
-    @patch('app.services.users.verify_password')
-    def test_authenticate(
-        self, mock_verify_password, repo
-    ):
-        email = "test@example.com"
-        password = "testPassword1"
-        sentinel.user = User()
-
-        repo.get_by_email.side_effect = [sentinel.user]
-        mock_verify_password.side_effect = [True]
-
-        repo.authenticate.return_value = User(email=email)
-
-        assert UserServices(repo).authenticate(email=email, password=password)
-
-    def test_authenticate_not_found_user(self, repo):
-        email = "test@example.com"
-        password = "testPassword1"
-        repo.get_by_email.side_effect = [None]
-
-        with pytest.raises(UserNotFound):
-            UserServices(repo).authenticate(email=email, password=password)
-
-    @patch('app.services.users.verify_password')
-    def test_authenticate_wrong_password(self, mock_verify_password, repo):
-        email = "test@example.com"
-        wrong_password = "testPassword2"
-        sentinel.user = User()
-
-        repo.get_by_email.side_effect = [sentinel.user]
-        mock_verify_password.side_effect = [False]
-
-        with pytest.raises(UserIncorrectCredentials):
-            UserServices(repo).authenticate(
-                email=email, password=wrong_password)
 
     def test_remove_user_not_found(self, repo):
         repo.get.side_effect = [None]
