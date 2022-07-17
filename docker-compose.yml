@@ -1,53 +1,49 @@
 version: "2"
 
 services:
+    # kafka-ui:
+    #   container_name: kafka-ui
+    #   image: provectuslabs/kafka-ui:latest
+    #   ports:
+    #     - 8080:8080
+    #   depends_on:
+    #     - zookeeper
+    #     - broker
+    #   environment:
+    #     KAFKA_CLUSTERS_0_NAME: local
+    #     KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9092
+    #     KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - 8080:8080
-    depends_on:
-      - zookeeper
-      - broker
-      - schemaregistry
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
-      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schemaregistry:8085
+    # zookeeper:
+    #   image: confluentinc/cp-zookeeper:7.0.0
+    #   hostname: zookeeper
+    #   container_name: zookeeper
+    #   environment:
+    #     ZOOKEEPER_CLIENT_PORT: 2181
+    #     ZOOKEEPER_TICK_TIME: 2000
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.0.0
-    hostname: zookeeper
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+    # broker:
+    #   image: confluentinc/cp-kafka:7.0.0
+    #   container_name: broker
+    #   ports:
+    #     - "29092:29092"
+    #   depends_on:
+    #     - zookeeper
+    #   environment:
+    #     KAFKA_BROKER_ID: 1
+    #     KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+    #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONNECTIONS_FROM_HOST:PLAINTEXT
+    #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,CONNECTIONS_FROM_HOST://localhost:29092
+    #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
-  broker:
-    image: confluentinc/cp-kafka:7.0.0
-    container_name: broker
-    ports:
-      - "29092:29092"
-    depends_on:
-      - zookeeper
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONNECTIONS_FROM_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,CONNECTIONS_FROM_HOST://localhost:29092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-
-  mysql:
-    platform: linux/x86_64
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_DATABASE=test
-      - MYSQL_USER=test
-      - MYSQL_PASSWORD=test
-      - MYSQL_ROOT_PASSWORD=test
+    mysql:
+        image: mysql:8.0
+        ports:
+            - "3306:3306"
+        environment:
+            - MYSQL_DATABASE=test
+            - MYSQL_USER=test
+            - MYSQL_PASSWORD=test
+            - MYSQL_ROOT_PASSWORD=test

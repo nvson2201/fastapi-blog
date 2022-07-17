@@ -32,6 +32,11 @@ def login_access_token(
             status_code=400,
             detail="Incorrect email or password"
         )
+    except UserNotFound:
+        raise HTTPException(
+            status_code=400,
+            detail="Incorrect email or password"
+        )
     except UserInactive:
         raise HTTPException(
             status_code=403,
@@ -45,6 +50,15 @@ def test_token(current_user: models.User
                = Depends(authentication.get_current_active_user)) -> Any:
     """
     Test access token
+    """
+    return current_user
+
+
+@router.post("/logout", response_model=schemas.UserInResponse)
+def test_token2(current_user: models.User
+                = Depends(authentication.get_current_active_user)) -> Any:
+    """
+    Logout user
     """
     return current_user
 
