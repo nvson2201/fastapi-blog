@@ -9,7 +9,7 @@ from app.schemas.posts import (
     PostInResponse, ListOfPostsInResponse
 )
 from app.models import User
-from app.plugins.kafka import producer
+# from app.plugins.kafka import producer
 from app.services.exceptions.favorites import (
     PostAlreadyFavoried, PostStillNotFavorited)
 from app.services.exceptions.posts import PostNotFound, PostDuplicate
@@ -26,9 +26,9 @@ class PostServices:
         if not post_record:
             raise PostNotFound
 
-        producer.produce(
-            {'id': post_record.id}
-        )
+        # producer.produce(
+        #     {'id': post_record.id}
+        # )
 
         author = self.profile_services.get_profile_by_id(
             id=post_record.author_id,
@@ -107,18 +107,18 @@ class PostServices:
             body=create_data
         )
 
-        notification_message = {
-            "content": "Created new post!",
-            "sender_id": author_id,
-            "post_id": post_record.id
-        }
+        # notification_message = {
+        #     "content": "Created new post!",
+        #     "sender_id": author_id,
+        #     "post_id": post_record.id
+        # }
 
-        producer.produce(
-            notification_message
-        )
+        # producer.produce(
+        #     notification_message
+        # )
 
         self.repository.link_new_tags_to_post_by_id(
-            id=post_record.id, tags=body['tagList']
+            id=post_record.id, tags=body_dict['tags']
         )
 
         author = self.profile_services.get_profile_by_id(id=author_id)
@@ -140,9 +140,9 @@ class PostServices:
         offset: int = 0,
         requested_user: Optional[User] = None,
     ) -> ListOfPostsInResponse:
-
-        tags = tags.split(",")
-        tags = [tag.strip() for tag in tags]
+        if tags:
+            tags = tags.split(",")
+            tags = [tag.strip() for tag in tags]
 
         posts_in_db = self.repository.posts_filters(
             tags=tags,

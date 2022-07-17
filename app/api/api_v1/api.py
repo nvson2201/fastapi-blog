@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 
 from app.api.api_v1.endpoints import (
-    comments, google, profiles
+    comments, google, profiles, tags
 )
 from app.api.api_v1.endpoints.posts import api as posts
 from app.api.api_v1.endpoints.users import api as users
@@ -16,4 +16,7 @@ api_router.include_router(
 api_router.include_router(google.router, tags=["google"])
 api_router.include_router(
     profiles.router, prefix="/profiles", tags=["profiles"]
+)
+api_router.include_router(
+    tags.router, prefix="/tags", tags=["tags"]
 )

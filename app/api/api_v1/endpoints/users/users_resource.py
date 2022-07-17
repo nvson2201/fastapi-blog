@@ -43,7 +43,7 @@ def read_users(
 @router.post(
     "/",
     response_model=schemas.UserInResponse,
-    dependencies=[Depends(get_current_active_superuser)]
+    # dependencies=[Depends(get_current_active_superuser)]
 )
 async def create_user(
     *,
@@ -103,9 +103,7 @@ def read_user_by_id(
     user_id: int,
     user_services: UserServices = Depends(get_user_services)
 ) -> Any:
-    """
-    Get a specific user by id.
-    """
+
     try:
         user = user_services.get(id=user_id)
     except UserNotFound:

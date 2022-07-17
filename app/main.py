@@ -12,7 +12,7 @@ from app.config import settings
 app = FastAPI()
 origins = [
     "http://localhost",
-    "http://localhost:8081",
+    "http://localhost:3000",
 ]
 
 app.mount("/static", StaticFiles(directory="static"), name="static")

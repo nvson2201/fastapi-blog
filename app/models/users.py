@@ -21,7 +21,7 @@ class User(Base):
     avatar = Column((String(255)), nullable=True)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    is_active = Column(Boolean(), default=False)
+    is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
     is_banned = Column(Boolean(), default=False)
 

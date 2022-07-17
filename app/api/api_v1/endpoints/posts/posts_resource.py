@@ -31,7 +31,7 @@ def read_posts(
     )
 
 
-@router.post("/", response_model=schemas.PostInResponse)
+@router.post("", response_model=schemas.PostInResponse)
 def create_post(
     *,
     body: schemas.PostCreate,

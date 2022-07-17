@@ -126,8 +126,9 @@ class PostRepository(BaseRepository[Post, PostCreate, PostUpdate]):
         limit: int = 20,
         offset: int = 0,
     ) -> List[Post]:
+        q = self.db.query(Post)
         if tags:
-            q = self.db.query(Post).distinct().where(Post.posts_to_tags) \
+            q.distinct().where(Post.posts_to_tags) \
                 .filter(PostsToTags.tag.has(Tag.tag.in_(tags)))
 
         if author:
